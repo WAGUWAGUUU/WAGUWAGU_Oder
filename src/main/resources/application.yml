@@ -8,7 +8,7 @@ spring:
       ddl-auto: none
   data:
     redis:
-      host: 192.168.0.26
+      host: localhost
       port: 6379
     mongodb:
       uri: mongodb://localhost:27017/waguwagu

@@ -43,12 +43,15 @@ public class OrderServiceImpl implements OrderService{
     @Override
     public void statusTracking() {
 
+
+
+
         String status="배달완료";
 
-        Optional<RedisOrder> byId = redIsRepository.findById(String.valueOf(2L));
+        Optional<RedisOrder> byId = redIsRepository.findById("8bd37582-2aeb-4213-9dfa-aaa432fb9983");
 
         RedisOrder redisOrder = RedisOrder.builder()
-                .id(2L)
+                .id(Long.valueOf("8bd37582-2aeb-4213-9dfa-aaa432fb9983"))
                 .orderState(status)
                 .orderCreatedAt(LocalDateTime.now())
                 .build();

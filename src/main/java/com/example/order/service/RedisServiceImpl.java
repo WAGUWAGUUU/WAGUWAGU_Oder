@@ -3,38 +3,50 @@ package com.example.order.service;
 import com.example.order.domain.entity.RedisOrder;
 import com.example.order.domain.dto.RedisDto;
 import com.example.order.repository.OrderRedIsRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RedisServiceImpl implements RedisService{
 
+
     private final OrderRedIsRepository repository;
+    private final ObjectMapper objectMapper;
 
     @Override
-    public void save(RedisDto redisDto) {
+    public Optional<RedisOrder> save(RedisDto redisDto) {
 
         RedisOrder redisOrder = RedisOrder.builder()
-                .id(3L)
-                .orderDetail("고객요청사항")
-                .orderState("주문하는상태")
-                .orderCreatedAt(LocalDateTime.now())
+                .id(redisDto.id())
+                .menuName(redisDto.menuName())
+                .orderCreatedAt(redisDto.orderCreatedAt())
+                .orderState(redisDto.orderState())
+                .menuEachPrice(redisDto.menuPrice())
+                .orderTotalAmount(redisDto.orderTotalAmount())
+                .storeDeliveryFee(redisDto.storeDeliveryFee())
                 .build();
 
-        repository.save(redisOrder);
+        redisOrder.setOrder(redisDto.order(), objectMapper);
 
+        repository.save(redisOrder);
+        return Optional.of(redisOrder);
     }
 
+
     @Override
-    public RedisOrder get(RedisDto redisOrder) {
+    public Optional<RedisOrder> get(long redisOrder) {
+        Optional<RedisOrder> byId = repository.findById(String.valueOf(redisOrder));
 
-        Iterable<RedisOrder> all = repository.findAll();
+        if (byId.isEmpty()) {
+            return Optional.empty();
+        }
 
-        return (RedisOrder) all;
+        return byId;
     }
 }

@@ -8,7 +8,10 @@ import com.example.order.domain.dto.RedisDto;
 import com.example.order.service.MongoService;
 import com.example.order.service.RedisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/Order")
@@ -30,20 +33,19 @@ public class OrderController {
         return order;
     }
 
-
-
-    @PostMapping("redis")
-    public void save1(@RequestBody RedisDto redisDto){
-
+    @PostMapping("/redis")
+    public ResponseEntity<RedisOrder> createOrder(@RequestBody RedisDto redisDto) {
         redisService.save(redisDto);
+        return ResponseEntity.ok().build(); // Ensure response is returned correctly
     }
 
-    @GetMapping("redis")
-    public RedisOrder get1(@RequestBody RedisDto redisDto){
-
-        RedisOrder redisOrder = redisService.get(redisDto);
-
-        return redisOrder ;
+    @GetMapping("/{id}")
+    public ResponseEntity<RedisOrder> getOrder(@PathVariable long id) {
+        Optional<RedisOrder> order = redisService.get(id);
+        return order.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+
 
 }
