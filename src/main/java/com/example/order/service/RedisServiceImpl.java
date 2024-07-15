@@ -3,7 +3,6 @@ package com.example.order.service;
 import com.example.order.domain.entity.RedisOrder;
 import com.example.order.domain.dto.RedisDto;
 import com.example.order.repository.OrderRedIsRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class RedisServiceImpl implements RedisService{
                 .storeDeliveryFee(redisDto.storeDeliveryFee())
                 .build();
 
-        redisOrder.setOrder(redisDto.order(), objectMapper);
+        redisOrder.serializationOrder(redisDto.order(), objectMapper);
 
         repository.save(redisOrder);
         return Optional.of(redisOrder);
@@ -40,7 +39,7 @@ public class RedisServiceImpl implements RedisService{
 
 
     @Override
-    public Optional<RedisOrder> get(long redisOrder) {
+    public Optional<RedisOrder> get(Long redisOrder) {
         Optional<RedisOrder> byId = repository.findById(String.valueOf(redisOrder));
 
         if (byId.isEmpty()) {

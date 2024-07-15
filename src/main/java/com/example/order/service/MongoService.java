@@ -5,7 +5,7 @@ import com.example.order.domain.dto.MongoDto;
 
 public interface MongoService {
      void save(MongoDto mongoDto);
-     Order get();
+     Order get(Long id);
 
 
 }

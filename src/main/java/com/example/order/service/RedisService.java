@@ -8,6 +8,6 @@ import java.util.Optional;
 public interface RedisService {
 
    Optional<RedisOrder> save(RedisDto redisDto);
-    Optional<RedisOrder> get(long id);
+    Optional<RedisOrder> get(Long id);
 
 }

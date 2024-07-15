@@ -27,10 +27,10 @@ public class RedisOrder {
     private String customerRequests;
     private String riderRequests;
     private int orderTotalAmount;
+
     private int storeDeliveryFee;
 
-    // Method to set the order as a JSON string
-    public void setOrder(Map<String, List<String>> order, ObjectMapper objectMapper) {
+    public void serializationOrder(Map<String, List<String>> order, ObjectMapper objectMapper) {
         try {
             this.order = objectMapper.writeValueAsString(order);
         } catch (JsonProcessingException e) {

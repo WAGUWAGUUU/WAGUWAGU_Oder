@@ -21,16 +21,16 @@ public class OrderController {
     private final MongoService mongoService;
     private final RedisService redisService;
 
-    @PostMapping("mongo")
-    public void save(@RequestBody MongoDto mongoDto){
-
+    @PostMapping("/mongo")
+    public ResponseEntity<Void> saveOrder(@RequestBody MongoDto mongoDto) {
         mongoService.save(mongoDto);
+        return ResponseEntity.ok().build();
     }
-    @GetMapping("mongo")
-    public Order get(){
-        Order order = mongoService.get();
 
-        return order;
+    @GetMapping("/mongo/{id}")
+    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+        Order order = mongoService.get(id);
+        return ResponseEntity.ok(order);
     }
 
     @PostMapping("/redis")
@@ -39,8 +39,8 @@ public class OrderController {
         return ResponseEntity.ok().build(); // Ensure response is returned correctly
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<RedisOrder> getOrder(@PathVariable long id) {
+    @GetMapping("/redis/{id}")
+    public ResponseEntity<RedisOrder> getOrder1(@PathVariable Long id) {
         Optional<RedisOrder> order = redisService.get(id);
         return order.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

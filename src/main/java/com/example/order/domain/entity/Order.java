@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 
 @Document(collection = "Order")
@@ -18,12 +20,20 @@ public class Order {
 
     @Id
     private Long id;
-
     private String orderState;
     private LocalDateTime orderCreatedAt;
-    private String menuName;
-    private int menuPrice;
-    private String orderDetail;
+    private int menuEachPrice;
     private int orderTotalAmount;
     private int storeDeliveryFee;
+    private List<MenuItem> order;
+    private String customerRequests;
+    private String riderRequests;
+
+    @Data
+    @Builder
+    public static class MenuItem {
+        private String menuName;
+        private List<String> menuOption;
+    }
+
 }
