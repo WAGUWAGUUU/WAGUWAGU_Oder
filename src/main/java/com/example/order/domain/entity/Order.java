@@ -20,6 +20,8 @@ public class Order {
 
     @Id
     private Long id;
+    private Long customerId;
+    private Long ownerId;
     private String orderState;
     private LocalDateTime orderCreatedAt;
     private int menuEachPrice;
@@ -28,6 +30,7 @@ public class Order {
     private List<MenuItem> order;
     private String customerRequests;
     private String riderRequests;
+    private boolean isDeleted;
 
     @Data
     @Builder

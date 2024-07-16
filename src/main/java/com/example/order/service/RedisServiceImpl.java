@@ -1,11 +1,13 @@
 package com.example.order.service;
 
+import com.example.order.domain.dto.StateDto;
 import com.example.order.domain.entity.RedisOrder;
 import com.example.order.domain.dto.RedisDto;
 import com.example.order.repository.OrderRedIsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
@@ -41,11 +43,44 @@ public class RedisServiceImpl implements RedisService{
     @Override
     public Optional<RedisOrder> get(Long redisOrder) {
         Optional<RedisOrder> byId = repository.findById(String.valueOf(redisOrder));
+        if (byId.isEmpty()) {
+            return Optional.empty();
+        }
+        return byId;
+    }
 
+    @Override
+    public Optional<RedisOrder> update(Long id, StateDto stateDto) {
+
+        Optional<RedisOrder> byId = repository.findById(String.valueOf(id));
         if (byId.isEmpty()) {
             return Optional.empty();
         }
 
-        return byId;
+        RedisOrder redisOrder = RedisOrder.builder()
+                                .id(id)
+                                .order(byId.get().getOrder())
+                                .orderState(stateDto.status())
+                                .orderCreatedAt(byId.get().getOrderCreatedAt())
+                                .riderRequests(byId.get().getRiderRequests())
+                                .menuEachPrice(byId.get().getMenuEachPrice())
+                                .build();
+
+        repository.save(redisOrder);
+
+
+        return Optional.of(redisOrder);
+
+    }
+
+    @Override
+    public Optional<RedisOrder> delete(Long id, StateDto stateDto) {
+        Optional<RedisOrder> byId = repository.findById(String.valueOf(id));
+        if (byId.isEmpty()) {
+            return Optional.empty();
+        }
+        repository.delete(byId);
+
+        return Optional.empty();
     }
 }
