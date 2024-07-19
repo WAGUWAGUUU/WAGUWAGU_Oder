@@ -13,9 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -64,8 +62,6 @@ public class RedisServiceImpl implements RedisService {
         StatusType statusType = StatusType.fromString(state);
 
         RedisOrder update = redisDao.update(id, statusType.getDisplayName());
-
-        update.setOrderState(statusType.getDisplayName(), LocalDateTime.now());
 
         if (statusType == StatusType.DELIVERING) {
             KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()

@@ -1,12 +1,9 @@
 package com.example.order.domain.dao;
 
-
-
 import com.example.order.domain.entity.RedisOrder;
 import com.example.order.repository.OrderRedIsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 

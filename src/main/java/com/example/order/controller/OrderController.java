@@ -11,11 +11,7 @@ import org.bson.types.ObjectId;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
@@ -58,6 +54,14 @@ public class OrderController {
         return mongoService.findByOwnerId(ownerId);
     }
 
+    @PostMapping("/update/{orderId}")
+    public Order updateMongo(@PathVariable ObjectId orderId , @RequestBody String status){
+        Order update = mongoService.update(orderId, status);
+
+        return update;
+    }
+
+
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/{orderId}")
     public String delete(@PathVariable ObjectId orderId) {
@@ -72,10 +76,6 @@ public class OrderController {
         return "주무건 생성 성공";
     }
 
-    public String DeliveryDriverAssignment(){
-
-        return "fe";
-    }
 
     @GetMapping("/redis/{id}")
     public RedisOrder getOrder1(@PathVariable Long id) {

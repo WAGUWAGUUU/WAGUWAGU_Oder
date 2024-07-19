@@ -13,9 +13,9 @@ import java.util.List;
 public interface MongoDaoImpl{
 
     List<Order> selectByDate(Long id, LocalDate startDate, LocalDate endDate, int pageNumber, int pageSize);
-    List<Order> findById(Long id);
     List<Order> findByCustomerId(Long customerId);
     List<Order> findByOwnerId(Long ownerId);
     void save(Order order);
+    Order update(ObjectId id, String state);
     UpdateResult delete(ObjectId id);
 }

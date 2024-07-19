@@ -8,7 +8,6 @@ import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -23,12 +22,12 @@ public class MongoServiceImpl implements MongoService{
 
     @Override
     public void save(UserRequest userRequest) {
-        LocalDateTime dateTime = LocalDateTime.of(2024, 7, 15, 15, 30, 0);
+
         Order order = Order.builder()
                 .ownerId(userRequest.ownerId())
                 .customerId(userRequest.customerId())
                 .orderState(Collections.singletonList(StatusType.CREATED.getDisplayName()))
-                .orderCreatedAt(dateTime)
+                .orderCreatedAt(LocalDateTime.now())
                 .orderTotalAmount(userRequest.orderTotalAmount())
                 .storeDeliveryFee(userRequest.storeDeliveryFee())
                 .storeName(userRequest.storeName())
@@ -44,11 +43,6 @@ public class MongoServiceImpl implements MongoService{
                 .isDeleted(false)
                 .build();
         mongoDao.save(order);
-    }
-
-    @Override
-    public List<Order> get(Long id) {
-        return mongoDao.findById(id);
     }
 
     @Override
@@ -69,5 +63,11 @@ public class MongoServiceImpl implements MongoService{
     @Override
     public UpdateResult delete(ObjectId id) {
         return mongoDao.delete(id);
+    }
+
+    @Override
+    public Order update(ObjectId id, String state) {
+        StatusType statusType = StatusType.fromString(state);
+        return mongoDao.update(id,statusType.getDisplayName());
     }
 }

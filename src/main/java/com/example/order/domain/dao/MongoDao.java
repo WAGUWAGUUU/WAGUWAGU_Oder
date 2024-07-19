@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -52,16 +51,22 @@ public class MongoDao implements MongoDaoImpl{
         return orders;
     }
 
-    public List<Order> findById(Long id) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("id").is(id).and("isDeleted").is(false));
-
-        return mongoTemplate.find(query, Order.class);
-    }
 
     @Override
     public void save(Order order) {
         mongoTemplate.save(order);
+    }
+
+    @Override
+    public Order update(ObjectId id, String state) {
+
+        Query query = new Query(Criteria.where("_id").is(id));
+        Order order = mongoTemplate.findOne(query, Order.class);
+        order.setOrderState(state, LocalDateTime.now());
+
+        mongoTemplate.save(order);
+
+        return order;
     }
 
     @Override
