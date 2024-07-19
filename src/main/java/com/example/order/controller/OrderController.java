@@ -1,21 +1,23 @@
 package com.example.order.controller;
 
-
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.RedisOrder;
-import com.example.order.domain.dto.MongoDto;
-import com.example.order.domain.dto.RedisDto;
-import com.example.order.domain.request.StoreRequest;
+import com.example.order.domain.request.PageRequest;
+import com.example.order.domain.request.UserRequest;
 import com.example.order.service.MongoService;
 import com.example.order.service.RedisService;
-import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.bson.types.ObjectId;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+
 
 @RestController
 @RequestMapping("api/v1/Order")
@@ -25,50 +27,75 @@ public class OrderController {
     private final MongoService mongoService;
     private final RedisService redisService;
 
-    public void orderSave(@RequestBody MongoDto mongoDto){
-        mongoService.save(mongoDto);
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/history")
+    public String orderSave(@RequestBody UserRequest userRequest) {
+        mongoService.save(userRequest);
+
+        return "주문내역 저장 성공";
     }
 
-    @GetMapping("/mongo/{requestId}/history/{startDate}/{endDate}")
-    public List<Order> selectByDate(@PathVariable Long requestId,LocalDateTime startDate,LocalDateTime endDate,
-                                    @RequestBody StoreRequest storeRequest){
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{requestId}/history/{startDate}/{endDate}")
+    public List<Order> selectByDate(@PathVariable Long requestId,
+                                    @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                                    @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+                                    @RequestBody PageRequest pageRequest ) {
 
-        List<Order> orders = mongoService.selectByDate(requestId,startDate,endDate,storeRequest.pageNumber());
+        int pageNumber = pageRequest.pageNumber();
+
+        List<Order> orders = mongoService.selectByDate(requestId, startDate, endDate, pageNumber);
         return orders;
     }
 
-    @GetMapping("/mongo/{ownerId}/history")
-    public List<Order> selectByOwnerAll(@PathVariable Long ownerId){
-
-        List<Order> orders = mongoService.findByCustomerId(ownerId);
-        return orders;
+    @GetMapping("/consumer/{consumerId}/history")
+    public List<Order> selectByConsumerAll(@PathVariable Long consumerId) {
+        return mongoService.findByCustomerId(consumerId);
     }
 
-    @GetMapping("/mongo/{consumerId}/history")
-    public List<Order> selectByConsumerAll(@PathVariable Long consumerId){
-
-        List<Order> orders = mongoService.findByCustomerId(consumerId);
-        return orders;
+    @GetMapping("/owner/{ownerId}/history")
+    public List<Order> selectByOwnerAll(@PathVariable Long ownerId) {
+        return mongoService.findByOwnerId(ownerId);
     }
 
-    @PostMapping("/mongo/{id}")
-    public UpdateResult delete(@PathVariable Long mongoId) {
-        UpdateResult delete = mongoService.delete(mongoId);
-        return delete;
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/{orderId}")
+    public String delete(@PathVariable ObjectId orderId) {
+        mongoService.delete(orderId);
+        return "주문건 삭제 성공";
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/redis")
-    public ResponseEntity<RedisOrder> createOrder(@RequestBody RedisDto redisDto) {
-        redisService.save(redisDto);
-        return ResponseEntity.ok().build();
+    public String createOrder(@RequestBody UserRequest userRequest) {
+        redisService.save(userRequest);
+        return "주무건 생성 성공";
+    }
+
+    public String DeliveryDriverAssignment(){
+
+        return "fe";
     }
 
     @GetMapping("/redis/{id}")
-    public ResponseEntity<RedisOrder> getOrder1(@PathVariable Long id) {
-        Optional<RedisOrder> order = redisService.get(id);
-        return order.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public RedisOrder getOrder1(@PathVariable Long id) {
+        RedisOrder redisOrder = redisService.get(id);
+        return redisOrder;
     }
+
+    @PostMapping("/redis/update/{id}")
+    public RedisOrder updateOrder(@PathVariable Long id, @RequestBody String status){
+        RedisOrder update = redisService.update(id, status);
+        return update;
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/redis/delete/{id}")
+    public String deleteOrder(@PathVariable Long id){
+        redisService.delete(id);
+        return "주문건 삭제 성공";
+    }
+
 
 
 

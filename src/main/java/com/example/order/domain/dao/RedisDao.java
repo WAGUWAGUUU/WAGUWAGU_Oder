@@ -1,89 +1,48 @@
 package com.example.order.domain.dao;
 
 
+
 import com.example.order.domain.entity.RedisOrder;
 import com.example.order.repository.OrderRedIsRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisDao implements OrderRedIsRepository{
+public class RedisDao implements RedisDaoImpl{
 
     private final OrderRedIsRepository orderRedIsRepository;
-    private final ObjectMapper objectMapper;
-
 
     @Override
-    public void delete(Optional<RedisOrder> byId) {
-
+    public RedisOrder save(RedisOrder redisOrder) {
+        return orderRedIsRepository.save(redisOrder);
     }
 
     @Override
-    public RedisOrder findById(Long id) {
-        return null;
+    public RedisOrder get(Long id) {
+        Optional<RedisOrder> byId = orderRedIsRepository.findById(String.valueOf(id));
+
+        return byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
     }
 
     @Override
-    public <S extends RedisOrder> S save(S entity) {
-        return null;
+    public RedisOrder update(Long id, String state) {
+        Optional<RedisOrder> byId = orderRedIsRepository.findById(String.valueOf(id));
+        RedisOrder redisOrder = byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
+        redisOrder.setOrderState(state, LocalDateTime.now());
+        orderRedIsRepository.save(redisOrder);
+        return redisOrder;
     }
 
     @Override
-    public <S extends RedisOrder> Iterable<S> saveAll(Iterable<S> entities) {
-        return null;
-    }
+    public void delete(Long id) {
+        Optional<RedisOrder> byId = orderRedIsRepository.findById(String.valueOf(id));
+        RedisOrder redisOrder = byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
 
-    @Override
-    public Optional<RedisOrder> findById(String string) {
-        return Optional.empty();
-    }
-
-    @Override
-    public boolean existsById(String string) {
-        return false;
-    }
-
-    @Override
-    public Iterable<RedisOrder> findAll() {
-        return null;
-    }
-
-    @Override
-    public Iterable<RedisOrder> findAllById(Iterable<String> strings) {
-        return null;
-    }
-
-    @Override
-    public long count() {
-        return 0;
-    }
-
-    @Override
-    public void deleteById(String string) {
-
-    }
-
-    @Override
-    public void delete(RedisOrder entity) {
-
-    }
-
-    @Override
-    public void deleteAllById(Iterable<? extends String> strings) {
-
-    }
-
-    @Override
-    public void deleteAll(Iterable<? extends RedisOrder> entities) {
-
-    }
-
-    @Override
-    public void deleteAll() {
+        orderRedIsRepository.delete(redisOrder);
 
     }
 }

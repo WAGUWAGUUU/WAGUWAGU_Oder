@@ -1,30 +1,22 @@
 package com.example.order.service;
 
-//import com.example.order.api.ApiVerification;
 import com.example.order.domain.entity.Order;
-import com.example.order.domain.entity.RedisOrder;
-import com.example.order.domain.request.StoreRequest;
-import com.example.order.domain.response.StoreResponse;
-import com.example.order.repository.OrderRedIsRepository;
+
+import com.example.order.kafka.dto.KafkaDeliveryDTO;
+import com.example.order.kafka.dto.KafkaStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
 
-    private final MongoTemplate mongoTemplate;
-    private final OrderRedIsRepository redIsRepository;
-
+    private final KafkaTemplate<String, KafkaStatus<KafkaDeliveryDTO>> kafkaTemplate;
 
     @Override
     public void statusTracking() {
-
-
 
     }
 
@@ -33,6 +25,12 @@ public class OrderServiceImpl implements OrderService{
     public Order history() {
         return null;
     }
+
+    @Override
+    public void deliveryKafkaEvent() {
+
+    }
+
 
 
 }

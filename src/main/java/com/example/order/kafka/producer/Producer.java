@@ -13,7 +13,7 @@ public class Producer {
 
     private final KafkaTemplate<String,KafkaStatus<KafkaEventDto>> kafkaTemplate;
 
-    String topic ="";
+    String topic ="cart-topic";
 
     @Bean
     private NewTopic newTopic(){

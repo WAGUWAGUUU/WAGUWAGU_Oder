@@ -12,3 +12,12 @@ spring:
       port: 6379
     mongodb:
       uri: mongodb://localhost:27017/waguwagu
+
+  kafka:
+    bootstrap-servers: 192.168.0.20:9092
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      group-id: order
+      auto-offset-reset: earliest

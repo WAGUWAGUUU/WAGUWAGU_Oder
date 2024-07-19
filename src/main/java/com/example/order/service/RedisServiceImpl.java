@@ -1,86 +1,99 @@
 package com.example.order.service;
 
-import com.example.order.domain.dto.StateDto;
+import com.example.order.domain.dao.RedisDao;
 import com.example.order.domain.entity.RedisOrder;
-import com.example.order.domain.dto.RedisDto;
-import com.example.order.repository.OrderRedIsRepository;
+import com.example.order.domain.request.UserRequest;
+import com.example.order.kafka.dto.KafkaCartDTO;
+import com.example.order.kafka.dto.KafkaDeliveryDTO;
+import com.example.order.kafka.dto.KafkaStatus;
+import com.example.order.domain.type.StatusType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class RedisServiceImpl implements RedisService{
-
-
-    private final OrderRedIsRepository repository;
+public class RedisServiceImpl implements RedisService {
+    private final KafkaTemplate<String, KafkaStatus<KafkaDeliveryDTO>> kafkaDeliveryTemplate;
+    private final KafkaTemplate<String, KafkaStatus<KafkaCartDTO>> kafkaCartTemplate;
     private final ObjectMapper objectMapper;
+    private final RedisDao redisDao;
 
     @Override
-    public Optional<RedisOrder> save(RedisDto redisDto) {
-
+    public void save(UserRequest userRequest) {
         RedisOrder redisOrder = RedisOrder.builder()
-                .id(redisDto.id())
-                .menuName(redisDto.menuName())
-                .orderCreatedAt(redisDto.orderCreatedAt())
-                .orderState(redisDto.orderState())
-                .menuEachPrice(redisDto.menuPrice())
-                .orderTotalAmount(redisDto.orderTotalAmount())
-                .storeDeliveryFee(redisDto.storeDeliveryFee())
+                .customerId(userRequest.customerId())
+                .ownerId(userRequest.ownerId())
+                .menuName(userRequest.menuName())
+                .orderCreatedAt(LocalDateTime.now())
+                .menuEachPrice(userRequest.menuPrice())
+                .orderTotalAmount(userRequest.orderTotalAmount())
+                .storeDeliveryFee(userRequest.storeDeliveryFee())
+                .storeName(userRequest.storeName())
+                .storeAddress(userRequest.storeAddress())
+                .deliveryFee(userRequest.deliveryFee())
+                .distanceFromStoreToCustomer(userRequest.distanceFromStoreToCustomer())
+                .storeLatitude(userRequest.storeLatitude())
+                .storeLongitude(userRequest.storeLongitude())
+                .due(LocalDateTime.now()).build();
+
+        redisOrder.setOrderState(StatusType.CREATED.getDisplayName(), LocalDateTime.now());
+        redisOrder.serializationOrder(userRequest.order(), objectMapper);
+        redisDao.save(redisOrder);
+        KafkaCartDTO kafkaCartDTO = KafkaCartDTO.builder()
+                .customerId(userRequest.customerId())
                 .build();
-
-        redisOrder.serializationOrder(redisDto.order(), objectMapper);
-
-        repository.save(redisOrder);
-        return Optional.of(redisOrder);
-    }
-
-
-    @Override
-    public Optional<RedisOrder> get(Long redisOrder) {
-        Optional<RedisOrder> byId = repository.findById(String.valueOf(redisOrder));
-        if (byId.isEmpty()) {
-            return Optional.empty();
-        }
-        return byId;
+        KafkaStatus<KafkaCartDTO> kafkaStatus = new KafkaStatus<>(kafkaCartDTO, StatusType.CREATED.name());
+        kafkaCartTemplate.send("order-topic", kafkaStatus);
     }
 
     @Override
-    public Optional<RedisOrder> update(Long id, StateDto stateDto) {
-
-        Optional<RedisOrder> byId = repository.findById(String.valueOf(id));
-        if (byId.isEmpty()) {
-            return Optional.empty();
-        }
-
-        RedisOrder redisOrder = RedisOrder.builder()
-                                .id(id)
-                                .order(byId.get().getOrder())
-                                .orderState(stateDto.status())
-                                .orderCreatedAt(byId.get().getOrderCreatedAt())
-                                .riderRequests(byId.get().getRiderRequests())
-                                .menuEachPrice(byId.get().getMenuEachPrice())
-                                .build();
-
-        repository.save(redisOrder);
-
-
-        return Optional.of(redisOrder);
-
+    public RedisOrder get(Long id) {
+        return redisDao.get(id);
     }
 
     @Override
-    public Optional<RedisOrder> delete(Long id, StateDto stateDto) {
-        Optional<RedisOrder> byId = repository.findById(String.valueOf(id));
-        if (byId.isEmpty()) {
-            return Optional.empty();
-        }
-        repository.delete(byId);
+    public RedisOrder update(Long id, String state) {
+        StatusType statusType = StatusType.fromString(state);
 
-        return Optional.empty();
+        RedisOrder update = redisDao.update(id, statusType.getDisplayName());
+
+        update.setOrderState(statusType.getDisplayName(), LocalDateTime.now());
+
+        if (statusType == StatusType.DELIVERING) {
+            KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
+                    .orderId(update.getOrderId())
+                    .storeName(update.getStoreName())
+                    .storeAddress(update.getStoreAddress())
+                    .deliveryFee(update.getDeliveryFee())
+                    .distanceFromStoreToCustomer(update.getDistanceFromStoreToCustomer())
+                    .storeLatitude(update.getStoreLatitude())
+                    .storeLongitude(update.getStoreLongitude())
+                    .due(update.getDue()).build();
+
+            KafkaStatus<KafkaDeliveryDTO> kafkaStatus = new KafkaStatus<>(kafkaDeliveryDTO, "insert");
+            kafkaDeliveryTemplate.send("order-topic", kafkaStatus);
+        }
+
+
+
+        return update;
+    }
+
+    @Override
+    public void delete(Long id) {
+        redisDao.delete(id);
+    }
+
+    @KafkaListener(topics = "order-topic")
+    public void synchronization(KafkaStatus<KafkaCartDTO> status) {
+        System.out.println(status.status());
     }
 }
