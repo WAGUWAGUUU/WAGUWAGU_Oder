@@ -22,6 +22,9 @@ public class MongoServiceImpl implements MongoService{
 
     @Override
     public void save(UserRequest userRequest) {
+        Order.OrderList menuItem = Order.OrderList.builder()
+                .menuNameList(userRequest.menuNameList())
+                .build();
 
         Order order = Order.builder()
                 .ownerId(userRequest.ownerId())
@@ -29,19 +32,24 @@ public class MongoServiceImpl implements MongoService{
                 .orderState(Collections.singletonList(StatusType.CREATED.getDisplayName()))
                 .orderCreatedAt(LocalDateTime.now())
                 .orderTotalAmount(userRequest.orderTotalAmount())
-                .storeDeliveryFee(userRequest.storeDeliveryFee())
-                .storeName(userRequest.storeName())
-                .menuName(userRequest.menuName())
-                .optionTitle(userRequest.optionTitle())
+                .customerAddress(userRequest.customerAddress())
                 .customerRequests(userRequest.customerRequests())
                 .riderRequests(userRequest.riderRequests())
-                .storeAddress(userRequest.storeAddress())
-                .deliveryFee(userRequest.deliveryFee())
-                .distanceFromStoreToCustomer(userRequest.distanceFromStoreToCustomer())
+
+                .menuName(userRequest.menuName())
+                .optionTitle(userRequest.optionTitle())
+
+                .storeName(userRequest.storeName())
+                .storeAddressString(userRequest.storeAddressString())
                 .storeLongitude(userRequest.storeLongitude())
                 .storeLatitude(userRequest.storeLatitude())
+                .distanceFromStoreToCustomer(userRequest.distanceFromStoreToCustomer())
+                .storeDeliveryFee(userRequest.storeDeliveryFee())
+                .deliveryFee(userRequest.deliveryFee())
+                .menuItem(menuItem)
                 .isDeleted(false)
                 .build();
+
         mongoDao.save(order);
     }
 
@@ -61,12 +69,12 @@ public class MongoServiceImpl implements MongoService{
     }
 
     @Override
-    public UpdateResult delete(ObjectId id) {
+    public UpdateResult delete(Long id) {
         return mongoDao.delete(id);
     }
 
     @Override
-    public Order update(ObjectId id, String state) {
+    public Order update(Long id, String state) {
         StatusType statusType = StatusType.fromString(state);
         return mongoDao.update(id,statusType.getDisplayName());
     }

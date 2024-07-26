@@ -14,6 +14,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,24 +28,11 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public void save(UserRequest userRequest) {
-        RedisOrder redisOrder = RedisOrder.builder()
-                .customerId(userRequest.customerId())
-                .ownerId(userRequest.ownerId())
-                .menuName(userRequest.menuName())
-                .orderCreatedAt(LocalDateTime.now())
-                .menuEachPrice(userRequest.menuPrice())
-                .orderTotalAmount(userRequest.orderTotalAmount())
-                .storeDeliveryFee(userRequest.storeDeliveryFee())
-                .storeName(userRequest.storeName())
-                .storeAddress(userRequest.storeAddress())
-                .deliveryFee(userRequest.deliveryFee())
-                .distanceFromStoreToCustomer(userRequest.distanceFromStoreToCustomer())
-                .storeLatitude(userRequest.storeLatitude())
-                .storeLongitude(userRequest.storeLongitude())
-                .due(LocalDateTime.now()).build();
+
+        RedisOrder redisOrder = userRequest.toEntity();
 
         redisOrder.setOrderState(StatusType.CREATED.getDisplayName(), LocalDateTime.now());
-        redisOrder.serializationOrder(userRequest.order(), objectMapper);
+        redisOrder.serializationOrder(userRequest.menuNameList(), objectMapper);
         redisDao.save(redisOrder);
         KafkaCartDTO kafkaCartDTO = KafkaCartDTO.builder()
                 .customerId(userRequest.customerId())
@@ -53,21 +42,20 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public RedisOrder get(Long id) {
-        return redisDao.get(id);
+    public List<RedisOrder> get(Long requestId) {
+        return redisDao.get(requestId);
     }
 
     @Override
-    public RedisOrder update(Long id, String state) {
+    public RedisOrder update(UUID id, String state) {
         StatusType statusType = StatusType.fromString(state);
 
         RedisOrder update = redisDao.update(id, statusType.getDisplayName());
 
         if (statusType == StatusType.DELIVERING) {
             KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
-                    .orderId(update.getOrderId())
+                    .orderId(update.getOwnerId())
                     .storeName(update.getStoreName())
-                    .storeAddress(update.getStoreAddress())
                     .deliveryFee(update.getDeliveryFee())
                     .distanceFromStoreToCustomer(update.getDistanceFromStoreToCustomer())
                     .storeLatitude(update.getStoreLatitude())

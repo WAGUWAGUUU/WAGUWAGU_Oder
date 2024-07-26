@@ -4,7 +4,6 @@ package com.example.order.domain.dao;
 import com.example.order.domain.entity.Order;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -58,7 +57,7 @@ public class MongoDao implements MongoDaoImpl{
     }
 
     @Override
-    public Order update(ObjectId id, String state) {
+    public Order update(Long id, String state) {
 
         Query query = new Query(Criteria.where("_id").is(id));
         Order order = mongoTemplate.findOne(query, Order.class);
@@ -70,7 +69,7 @@ public class MongoDao implements MongoDaoImpl{
     }
 
     @Override
-    public UpdateResult delete(ObjectId id) {
+    public UpdateResult delete(Long id) {
 
         Query query = new Query(Criteria.where("_id").is(id));
         Update update = new Update().set("isDeleted", true);

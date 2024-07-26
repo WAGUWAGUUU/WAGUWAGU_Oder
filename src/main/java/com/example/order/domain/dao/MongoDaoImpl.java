@@ -5,6 +5,7 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 
 public interface MongoDaoImpl{
@@ -13,6 +14,6 @@ public interface MongoDaoImpl{
     List<Order> findByCustomerId(Long customerId);
     List<Order> findByOwnerId(Long ownerId);
     void save(Order order);
-    Order update(ObjectId id, String state);
-    UpdateResult delete(ObjectId id);
+    Order update(Long id, String state);
+    UpdateResult delete(Long id);
 }

@@ -5,9 +5,12 @@ import com.example.order.repository.OrderRedIsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,36 +24,48 @@ public class RedisDao implements RedisDaoImpl{
     }
 
     @Override
-    public RedisOrder get(Long id) {
+    public List<RedisOrder> get(Long ownerId) {
+        System.out.println("Fetching order with requestId: " + ownerId);
 
-        Optional<RedisOrder> byId = orderRedIsRepository.findById(String.valueOf(id));
-        return byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
+        List<RedisOrder> allOrders = orderRedIsRepository.findAll();
+
+
+        List<RedisOrder> filteredOrders = allOrders.stream()
+                .filter(order -> order.getOwnerId().equals(ownerId))
+                .collect(Collectors.toList());
+        return filteredOrders;
     }
 
+
     @Override
-    public RedisOrder update(Long id, String state) {
-        ReentrantLock lock = new ReentrantLock(true);
-        Optional<RedisOrder> byId = orderRedIsRepository.findById(String.valueOf(id));
-        RedisOrder redisOrder = byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
+    public RedisOrder update(UUID id, String state) {
+//        ReentrantLock lock = new ReentrantLock(true);
+        String redisKey = "RedisOrder:" + id.toString();
+        System.out.println(redisKey);
+        Optional<RedisOrder> optionalOrder = orderRedIsRepository.findById(redisKey);
+        RedisOrder redisOrder = optionalOrder.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
 
-        try {
+        redisOrder.setOrderState(state, LocalDateTime.now());
+        orderRedIsRepository.save(redisOrder);
 
-            if (lock.tryLock(3, TimeUnit.SECONDS)) {
-                try {
-                    System.out.println("b 서버가 락을 획득했습니다.");
-
-                    redisOrder.setOrderState(state, LocalDateTime.now());
-                    orderRedIsRepository.save(redisOrder);
-
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                System.out.println("b 서버가 락 획득에 실패했습니다.");
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//
+//            if (lock.tryLock(3, TimeUnit.SECONDS)) {
+//                try {
+//                    System.out.println("락을 획득했습니다.");
+//
+//                    redisOrder.setOrderState(state, LocalDateTime.now());
+//                    orderRedIsRepository.save(redisOrder);
+//
+//                } finally {
+//                    lock.unlock();
+//                }
+//            } else {
+//                System.out.println("락 획득에 실패했습니다.");
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         return redisOrder;
     }
@@ -65,7 +80,7 @@ public class RedisDao implements RedisDaoImpl{
 
             if (lock.tryLock(3, TimeUnit.SECONDS)) {
                 try {
-                    System.out.println("b 서버가 락을 획득했습니다.");
+                    System.out.println("락을 획득했습니다.");
 
                     orderRedIsRepository.delete(redisOrder);
 
@@ -73,7 +88,7 @@ public class RedisDao implements RedisDaoImpl{
                     lock.unlock();
                 }
             } else {
-                System.out.println("b 서버가 락 획득에 실패했습니다.");
+                System.out.println("락 획득에 실패했습니다.");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

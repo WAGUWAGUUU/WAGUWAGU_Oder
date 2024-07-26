@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Document(collection = "Order")
@@ -25,18 +26,32 @@ public class Order {
     private LocalDateTime changeTime;
     @Setter
     private List<String> orderState;
-    private String storeName;
     private LocalDateTime orderCreatedAt;
-    private List<String> menuName;
+
+    private String customerAddress;
+
+    private String storePhone;
+    private String storeName;
+    private String storeAddressString;
+
+    private HashMap<String,List<String>> menuNameList;
+    private String menuName;
+    private String menuIntroduction;
+    private int menuPrice;
+
+    private HashMap<String,List<String>> optionTitleLIst;
     private String optionTitle;
-    private int menuEachPrice;
+    private int optionPrice;
+    private String listName;
+    private HashMap<String,List<String>> listNameList;
+    private String options;
+
     private String customerRequests;
     private String riderRequests;
     private String order;
-    private int optionPrice;
+
     private int orderTotalAmount;
     private int storeDeliveryFee;
-    private String storeAddress;
     private int deliveryFee;
     private double distanceFromStoreToCustomer;
     private double storeLongitude;
@@ -44,6 +59,9 @@ public class Order {
     @Setter
     private boolean isDeleted;
     private LocalDateTime due;
+
+    private OrderList menuItem;
+
 
 
     public void setOrderState(String state, LocalDateTime changeTime) {
@@ -53,6 +71,14 @@ public class Order {
         }
         this.orderState.add(state + ":" + changeTime.toString());
         this.changeTime = changeTime;
+    }
+
+    @Builder
+    @Getter
+    public static class OrderList {
+        private HashMap<String, List<HashMap<String, List<HashMap<String, List<HashMap<String,List<String>>>>>>>> menuNameList;
+
+
     }
 
 }
