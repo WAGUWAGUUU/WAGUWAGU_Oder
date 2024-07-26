@@ -37,16 +37,18 @@ public class RedisDao implements RedisDaoImpl{
     }
 
 
-    @Override
     public RedisOrder update(UUID id, String state) {
-//        ReentrantLock lock = new ReentrantLock(true);
-        String redisKey = "RedisOrder:" + id.toString();
-        System.out.println(redisKey);
-        Optional<RedisOrder> optionalOrder = orderRedIsRepository.findById(redisKey);
-        RedisOrder redisOrder = optionalOrder.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
 
-        redisOrder.setOrderState(state, LocalDateTime.now());
-        orderRedIsRepository.save(redisOrder);
+        Optional<RedisOrder> optionalOrder = orderRedIsRepository.findById(id.toString());
+        if (optionalOrder.isPresent()) {
+            RedisOrder redisOrder = optionalOrder.get();
+            redisOrder.setOrderState(state, LocalDateTime.now());
+            orderRedIsRepository.save(redisOrder);
+            return redisOrder;
+        } else {
+            throw new RuntimeException("아이디를 못 찾았습니다 " + id);
+        }
+    }
 
 //        try {
 //
@@ -67,8 +69,8 @@ public class RedisDao implements RedisDaoImpl{
 //            e.printStackTrace();
 //        }
 
-        return redisOrder;
-    }
+//        return redisOrder;
+//    }
 
     @Override
     public void delete(Long id) {

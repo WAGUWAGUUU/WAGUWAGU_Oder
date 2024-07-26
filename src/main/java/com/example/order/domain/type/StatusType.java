@@ -8,7 +8,8 @@ public enum StatusType {
     DELIVERY_REQUEST("배달요청"),
     DELIVERING("배달중"),
     DELIVERED("배달완료"),
-    CANCEL("주문취소");
+    CANCEL("주문취소"),
+    ACCEPT_DELIVERY("배달 수락");
 
     private final String displayName;
 
@@ -30,6 +31,8 @@ public enum StatusType {
                 return StatusType.COOKED;
             case "배달 요청":
                 return StatusType.DELIVERY_REQUEST;
+            case "배달 수락":
+                return StatusType.ACCEPT_DELIVERY;
             case "배달중":
                 return StatusType.DELIVERING;
             case "배달 완료":
