@@ -1,84 +1,92 @@
 package com.example.order.domain.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.redis.core.RedisHash;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-@Document(collection = "Order")
+@RedisHash("Order")
 @Builder
-@Slf4j
 @Getter
+@Slf4j
 public class Order {
 
     @Id
-    private ObjectId orderId;
+    private Long orderId;
+
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long customerId;
-    private Long ownerId;
-    @Setter
-    private LocalDateTime changeTime;
+    private String customerAddress;
+    private String customerRequests;
+
+    @EqualsAndHashCode.Include
+    @ToString.Include
+    private Long storeId;
+    private String storePhone;
+    private String storeName;
+    private String storeIntroduction;
+
+    private String storeAddress;
+    private Long storeMinimumOrderAmount;
+    private int storeDeliveryFee;
+    private double storeLongitude;
+    private double storeLatitude;
+    private LocalDateTime due;
+    private double distanceFromStoreToCustomer;
+    private String ReasonForCancellation;
+
+    private String riderRequests;
+    private int deliveryFee;
+
     @Setter
     private List<String> orderState;
     private LocalDateTime orderCreatedAt;
 
-    private String customerAddress;
-
-    private String storePhone;
-    private String storeName;
-    private String storeAddressString;
-
-    private HashMap<String,List<String>> menuNameList;
+    private String menuNameList;
     private String menuName;
+    private String listName;
     private String menuIntroduction;
-    private int menuPrice;
 
     private HashMap<String,List<String>> optionTitleLIst;
     private String optionTitle;
-    private int optionPrice;
-    private String listName;
     private HashMap<String,List<String>> listNameList;
     private String options;
-
-    private String customerRequests;
-    private String riderRequests;
-    private String order;
-
+    private int optionPrice;
+    private int menuPrice;
     private int orderTotalAmount;
-    private int storeDeliveryFee;
-    private int deliveryFee;
-    private double distanceFromStoreToCustomer;
-    private double storeLongitude;
-    private double storeLatitude;
-    @Setter
-    private boolean isDeleted;
-    private LocalDateTime due;
 
-    private OrderList menuItem;
-
+    private OrderHistory.OrderList menuItem;
 
 
     public void setOrderState(String state, LocalDateTime changeTime) {
-
         if (this.orderState == null) {
             this.orderState = new ArrayList<>();
         }
         this.orderState.add(state + ":" + changeTime.toString());
-        this.changeTime = changeTime;
     }
+
+
 
     @Builder
     @Getter
     public static class OrderList {
         private HashMap<String, List<HashMap<String, List<HashMap<String, List<HashMap<String,List<String>>>>>>>> menuNameList;
 
+    }
 
+    public void serializationOrder(HashMap<String, List<HashMap<String, List<HashMap<String, List<HashMap<String, List<String>>>>>>>> menuItem, ObjectMapper objectMapper) {
+        try {
+            this.menuNameList = objectMapper.writeValueAsString(menuItem);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
 }

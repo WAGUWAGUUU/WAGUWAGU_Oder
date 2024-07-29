@@ -7,9 +7,10 @@ public enum StatusType {
     COOKED("조리완료"),
     DELIVERY_REQUEST("배달요청"),
     DELIVERING("배달중"),
-    DELIVERED("배달완료"),
+    DELIVERED("배달 완료"),
     CANCEL("주문취소"),
     ACCEPT_DELIVERY("배달 수락");
+
 
     private final String displayName;
 

@@ -1,8 +1,11 @@
 package com.example.order.domain.request;
 
-import com.example.order.domain.entity.RedisOrder;
+import com.example.order.domain.entity.Order;
+import com.example.order.domain.entity.OrderHistory;
+import com.example.order.domain.type.StatusType;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -14,7 +17,7 @@ public record UserRequest(
         LocalDateTime orderCreatedAt,
         String storePhone,
         String storeName,
-        String storeAddressString,
+        String storeAddress,
         String menuName,
         String menuIntroduction,
         int menuPrice,
@@ -36,17 +39,17 @@ public record UserRequest(
         HashMap<String, List<HashMap<String, List<HashMap<String, List<HashMap<String,List<String>>>>>>>> menuNameList
 ) {
 
-    public RedisOrder toEntity() {
-        return RedisOrder.builder()
+    public Order OrderToEntity() {
+        return Order.builder()
                 .customerId(customerId)
-                .ownerId(ownerId)
-                .changeTime(changeTime)
+                .storeId(ownerId)
                 .orderState(orderState)
                 .orderCreatedAt(orderCreatedAt)
+                .orderState(Collections.singletonList(StatusType.CREATED.getDisplayName()))
                 .customerAddress(customerAddress)
                 .storePhone(storePhone)
                 .storeName(storeName)
-                .storeAddressString(storeAddressString)
+                .storeAddress(storeAddress)
                 .menuName(menuName)
                 .menuIntroduction(menuIntroduction)
                 .menuPrice(menuPrice)
@@ -67,5 +70,27 @@ public record UserRequest(
                 .build();
     }
 
+    public OrderHistory OrderHistoryToEntity() {
+        String menuItem = menuName + " " + optionTitle;
+        return OrderHistory.builder()
+                .menuItem(menuItem)
+                .storeId(ownerId)
+                .customerId(customerId)
+                .orderState(Collections.singletonList(StatusType.CREATED.getDisplayName()))
+                .orderCreatedAt(LocalDateTime.now())
+                .customerAddress(customerAddress)
+                .customerRequests(customerRequests)
+                .riderRequests(riderRequests)
+                .storeName(storeName)
+                .storeLongitude(storeLongitude)
+                .storeLatitude(storeLatitude)
+                .distanceFromStoreToCustomer(distanceFromStoreToCustomer)
+                .storeDeliveryFee(storeDeliveryFee)
+                .deliveryFee(deliveryFee)
+                .isDeleted(false)
+                .build();
+    }
 
 }
+
+

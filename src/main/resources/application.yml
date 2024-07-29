@@ -14,7 +14,7 @@ spring:
       uri: mongodb://localhost:27017/waguwagu
 
   kafka:
-    bootstrap-servers: 192.168.0.20:9092
+    bootstrap-servers: 34.71.194.186:9094
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:

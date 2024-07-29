@@ -1,7 +1,7 @@
 package com.example.order.domain.dao;
 
 
-import com.example.order.domain.entity.Order;
+import com.example.order.domain.entity.OrderHistory;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -20,7 +20,7 @@ public class MongoDao implements MongoDaoImpl{
 
     private final MongoTemplate mongoTemplate;
 
-    public List<Order> selectByDate(Long id, LocalDate startDate, LocalDate endDate, int pageNumber, int pageSize) {
+    public List<OrderHistory> selectByDate(Long id, LocalDate startDate, LocalDate endDate, int pageNumber, int pageSize) {
 
         LocalTime customTime = LocalTime.of(0, 0, 0);
 
@@ -30,42 +30,42 @@ public class MongoDao implements MongoDaoImpl{
         query.addCriteria(Criteria.where("orderCreatedAt").gte(startDate).lt(endDate).and("isDeleted").is(false));
         query.skip(pageNumber * pageSize).limit(pageSize);
 
-        return mongoTemplate.find(query, Order.class);
+        return mongoTemplate.find(query, OrderHistory.class);
     }
 
     @Override
-    public List<Order> findByCustomerId(Long customerId) {
+    public List<OrderHistory> findByCustomerId(Long customerId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("customerId").is(customerId).and("isDeleted").is(false));
-        List<Order> orders = mongoTemplate.find(query, Order.class);
-        return orders;
+        List<OrderHistory> orderHistories = mongoTemplate.find(query, OrderHistory.class);
+        return orderHistories;
     }
 
 
     @Override
-    public List<Order> findByOwnerId(Long ownerId) {
+    public List<OrderHistory> findByOwnerId(Long ownerId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("ownerId").is(ownerId).and("isDeleted").is(false));
-        List<Order> orders = mongoTemplate.find(query, Order.class);
-        return orders;
+        List<OrderHistory> orderHistories = mongoTemplate.find(query, OrderHistory.class);
+        return orderHistories;
     }
 
 
     @Override
-    public void save(Order order) {
-        mongoTemplate.save(order);
+    public void save(OrderHistory orderHistory) {
+        mongoTemplate.save(orderHistory);
     }
 
     @Override
-    public Order update(Long id, String state) {
+    public OrderHistory update(Long id, String state) {
 
         Query query = new Query(Criteria.where("_id").is(id));
-        Order order = mongoTemplate.findOne(query, Order.class);
-        order.setOrderState(state, LocalDateTime.now());
+        OrderHistory orderHistory = mongoTemplate.findOne(query, OrderHistory.class);
+        orderHistory.setOrderState(state, LocalDateTime.now());
 
-        mongoTemplate.save(order);
+        mongoTemplate.save(orderHistory);
 
-        return order;
+        return orderHistory;
     }
 
     @Override
@@ -73,6 +73,6 @@ public class MongoDao implements MongoDaoImpl{
 
         Query query = new Query(Criteria.where("_id").is(id));
         Update update = new Update().set("isDeleted", true);
-        return  mongoTemplate.updateMulti(query, update, Order.class);
+        return  mongoTemplate.updateMulti(query, update, OrderHistory.class);
     }
 }
