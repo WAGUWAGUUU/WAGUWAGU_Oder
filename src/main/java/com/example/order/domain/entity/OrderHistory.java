@@ -7,15 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-@Document(collection = "OrderHistory")
-@Builder
-@Slf4j
-@Getter
+import java.time.LocalDateTime;
+import java.util.*;
+
+@Document(collection = "OrderHistory")@Builder@Slf4j@Getter
 public class OrderHistory {
 
     @Id
@@ -50,7 +46,7 @@ public class OrderHistory {
     @Setter
     private List<String> orderState;
 
-    private HashMap<String, List<String>> menuNameList;
+    private Map<String, List<String>> menuNameList;
     private List<Order.Option> options;
     private List<Order.OptionList> optionLists;
     private List<Order.MenuItem> menuItems;
@@ -83,7 +79,6 @@ public class OrderHistory {
                 .deliveryFee(order.getDeliveryFee())
                 .orderState(order.getOrderState() != null ? order.getOrderState() : new ArrayList<>())
                 .isDeleted(false)
-                .menuNameList(order.getMenuNameList() != null ? order.getMenuNameList() : new HashMap<>())
                 .options(order.getOptions() != null ? order.getOptions() : new ArrayList<>())
                 .optionLists(order.getOptionLists() != null ? order.getOptionLists() : new ArrayList<>())
                 .menuItems(order.getMenuItems() != null ? order.getMenuItems() : new ArrayList<>())
@@ -101,11 +96,5 @@ public class OrderHistory {
             this.orderState = new ArrayList<>();
         }
         this.orderState.add(state + ":" + changeTime.toString());
-    }
-
-    @Builder
-    @Getter
-    public static class OrderList {
-        private HashMap<String, List<HashMap<String, List<HashMap<String, List<HashMap<String, List<String>>>>>>>> menuNameList;
     }
 }

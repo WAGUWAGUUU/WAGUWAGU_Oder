@@ -48,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public List<String> update(UUID id, UpdateRequest updateRequest) {
-        StatusType statusType = StatusType.fromString(updateRequest.state());
+        StatusType statusType = StatusType.fromString(updateRequest.status());
         Order update = redisDao.update(id, statusType.getDisplayName());
 
         if (statusType == StatusType.DELIVERY_REQUEST) {

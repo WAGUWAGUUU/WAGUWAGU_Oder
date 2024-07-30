@@ -4,6 +4,7 @@ import com.example.order.domain.entity.Order;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record UserRequest(
         Long customerId,
@@ -36,7 +37,7 @@ public record UserRequest(
                 .customerId(customerId)
                 .ownerId(ownerId)
                 .storeId(storeId)
-                .orderState(Collections.singletonList("CREATED:" + LocalDateTime.now()))
+                .orderState(Collections.singletonList("주문 요청:" + LocalDateTime.now()))
                 .customerAddress(customerAddress)
                 .storePhone(storePhone)
                 .storeName(storeName)
@@ -50,13 +51,13 @@ public record UserRequest(
                 .storeLongitude(storeLongitude)
                 .storeLatitude(storeLatitude)
                 .due(due)
-                .menuItems(menuItems)
-                .options(options)
-                .OptionLists(selectedOptions.stream().map(ol -> Order.OptionList.builder()
+                .menuItems(menuItems != null ? menuItems : Collections.emptyList())
+                .options(options != null ? options : Collections.emptyList())
+                .optionLists(selectedOptions != null ? selectedOptions.stream().map(ol -> Order.OptionList.builder()
                         .listName(ol.getListName())
-                        .options(ol.getOptions())
+                        .options(ol.getOptions() != null ? ol.getOptions() : Collections.emptyList())
                         .build()
-                ).toList())
+                ).collect(Collectors.toList()) : Collections.emptyList())
                 .build();
     }
 }

@@ -1,7 +1,7 @@
 package com.example.order.domain.request;
 
 public record UpdateRequest(
-        String state,
+        String status,
         Long riderId
 ) {
 }

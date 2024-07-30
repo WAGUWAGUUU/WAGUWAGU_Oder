@@ -52,8 +52,33 @@ public class Order {
     @Setter
     private List<String> orderState;
     private List<Option> options;
-    private List<OptionList> OptionLists;
+    private List<OptionList> optionLists;
     private List<MenuItem> menuItems;
+
+
+    public String getMenuName() {
+        return "";
+    }
+
+    public int getTotalPrice() {
+        return 0;
+    }
+
+    public List<OptionList> getSelectedOptions() {
+        return List.of();
+    }
+
+    public String getListName() {
+        return "";
+    }
+
+    public String getOptionTitle() {
+        return "";
+    }
+
+    public int getOptionPrice() {
+        return 0;
+    }
 
     public void setOrderState(String state, LocalDateTime changeTime) {
         if (this.orderState == null) {
