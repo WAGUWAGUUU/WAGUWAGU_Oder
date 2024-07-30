@@ -4,6 +4,7 @@ import com.example.order.domain.dao.MongoDao;
 import com.example.order.domain.dao.RedisDao;
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
+import com.example.order.domain.request.UpdateRequest;
 import com.example.order.domain.request.UserRequest;
 import com.example.order.domain.type.StatusType;
 import com.example.order.kafka.dto.KafkaCartDTO;
@@ -17,9 +18,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -35,9 +36,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void save(UserRequest userRequest) {
 
-        Order order = userRequest.OrderToEntity();
-        order.serializationOrder(userRequest.menuNameList(), objectMapper);
-        redisDao.save(order);
+
+        redisDao.save(userRequest.toEntity());
         KafkaCartDTO kafkaCartDTO = KafkaCartDTO.builder()
                 .customerId(userRequest.customerId())
                 .build();
@@ -47,11 +47,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order update(Long id, String state) {
-        StatusType statusType = StatusType.fromString(state);
+    public List<String> update(UUID id, UpdateRequest updateRequest) {
+        StatusType statusType = StatusType.fromString(updateRequest.state());
         Order update = redisDao.update(id, statusType.getDisplayName());
-        System.out.println(update.getStoreAddress());
-        System.out.println(update.getStoreName());
 
         if (statusType == StatusType.DELIVERY_REQUEST) {
             KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
@@ -63,17 +61,20 @@ public class OrderServiceImpl implements OrderService {
                     .storeLatitude(update.getStoreLatitude())
                     .storeLongitude(update.getStoreLongitude())
                     .due(update.getDue()).build();
-            System.out.println(kafkaDeliveryDTO.orderId());
             KafkaStatus<KafkaDeliveryDTO> kafkaStatus = new KafkaStatus<>(kafkaDeliveryDTO, "insert");
             kafkaDeliveryTemplate.send("order-topic", kafkaStatus);
-        }
-
-        if (statusType == StatusType.COOKED) {
+            return update.getOrderState();
+        }else if (statusType == StatusType.DELIVERED) {
             OrderHistory orderHistory = OrderHistory.convertToOrderHistory(update);
             mongoDao.save(orderHistory);
+            return update.getOrderState();
+        }else if (statusType == StatusType.DELIVERING){
+            update.insertRiderId(updateRequest.riderId());
+            redisDao.save(update);
+            return update.getOrderState();
         }
 
-        return update;
+        return update.getOrderState();
     }
 
     
@@ -97,16 +98,26 @@ public class OrderServiceImpl implements OrderService {
         return mongoDao.delete(id);
     }
 
-    @Override
-    public OrderHistory OrderHistoryUpdate(Long id, String state) {
-        StatusType statusType = StatusType.fromString(state);
-        return mongoDao.update(id,statusType.getDisplayName());
-    }
+//    @Override
+//    public OrderHistory OrderHistoryUpdate(UUID id, String state) {
+//        StatusType statusType = StatusType.fromString(state);
+//        return mongoDao.update(id,statusType.getDisplayName());
+//    }
 
 
     @Override
     public List<Order> get(Long requestId) {
         return redisDao.get(requestId);
+    }
+
+    @Override
+    public List<Order> getOrderStoreId(Long requestId) {
+        return redisDao.getOrderStoreId(requestId);
+    }
+
+    @Override
+    public List<Order> getOrderCustomerId(Long requestId) {
+        return redisDao.getOrderCustomerId(requestId);
     }
 
 

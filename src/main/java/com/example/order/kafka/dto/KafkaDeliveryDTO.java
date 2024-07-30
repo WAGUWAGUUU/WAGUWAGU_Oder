@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Builder
 public record KafkaDeliveryDTO(
-        Long orderId,
+        UUID orderId,
         String storeName,
         String storeAddress,
         int deliveryFee,

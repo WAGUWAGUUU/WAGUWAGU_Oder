@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -25,18 +26,36 @@ public class RedisDao implements RedisDaoImpl{
     @Override
     public List<Order> get(Long ownerId) {
         System.out.println("Fetching order with requestId: " + ownerId);
-
         List<Order> allOrders = orderRedIsRepository.findAll();
-
-
         List<Order> filteredOrders = allOrders.stream()
                 .filter(order -> order.getStoreId().equals(ownerId))
                 .collect(Collectors.toList());
         return filteredOrders;
     }
 
+    @Override
+    public List<Order> getOrderStoreId(Long storeId) {
+        System.out.println("Fetching order with requestId: " + storeId);
+        List<Order> allOrders = orderRedIsRepository.findAll();
+        List<Order> filteredOrders = allOrders.stream()
+                .filter(order -> order.getStoreId().equals(storeId))
+                .collect(Collectors.toList());
+        return filteredOrders;
+    }
 
-    public Order update(Long id, String state) {
+    @Override
+    public List<Order> getOrderCustomerId(Long customerId) {
+        System.out.println("Fetching order with requestId: " + customerId);
+
+        List<Order> allOrders = orderRedIsRepository.findAll();
+        List<Order> filteredOrders = allOrders.stream()
+                .filter(order -> order.getCustomerId().equals(customerId))
+                .collect(Collectors.toList());
+        return filteredOrders;
+    }
+
+
+    public Order update(UUID id, String state) {
 
         Optional<Order> optionalOrder = orderRedIsRepository.findById(id.toString());
         if (optionalOrder.isPresent()) {

@@ -2,6 +2,7 @@ package com.example.order.controller;
 
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
+import com.example.order.domain.request.UpdateRequest;
 import com.example.order.domain.request.UserRequest;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -28,9 +30,8 @@ public class OrderController {
     }
 
     @PostMapping("/request/{orderId}")
-    public Order updateOrder(@PathVariable Long id, @RequestBody String status){
-        Order update = orderService.update(id, status);
-
+    public List<String> updateOrder(@PathVariable("orderId") UUID id, @RequestBody UpdateRequest updateRequest) {
+        List<String> update = orderService.update(id,updateRequest);
         return update;
     }
 
@@ -59,24 +60,31 @@ public class OrderController {
 
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/{orderId}")
+    @PostMapping("/delete/{orderId}/history")
     public String delete(@PathVariable Long orderId) {
         orderService.OrderHistoryDelete(orderId);
         return "주문건 삭제 성공";
     }
 
-    @GetMapping("/{requestId}")
-    public  List<Order> getOrder1(@PathVariable Long requestId) {
-        List<Order> orders = (List<Order>) orderService.get(requestId);
+
+
+    @GetMapping("/consumer/{requestId}/all")
+    public  List<Order> getOrderCustomerId(@PathVariable Long requestId) {
+        List<Order> orders = (List<Order>) orderService.getOrderCustomerId(requestId);
         return orders;
     }
 
 
+    @GetMapping("/store/{requestId}/all")
+    public  List<Order> getOrderStoreId(@PathVariable Long requestId) {
+        List<Order> orders = (List<Order>) orderService.getOrderStoreId(requestId);
+        return orders;
+    }
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/delete/{id}")
-    public String deleteOrder(@PathVariable Long id){
-        orderService.delete(id);
+    @PostMapping("/delete/{orderId}")
+    public String deleteOrder(@PathVariable Long orderId){
+        orderService.delete(orderId);
         return "주문건 삭제 성공";
     }
 

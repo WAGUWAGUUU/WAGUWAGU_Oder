@@ -24,6 +24,8 @@ public class OrderHistory {
     private Long customerId;
     private String customerAddress;
     private String customerRequests;
+    private Long ownerId;
+    private Long riderId;
 
     private Long storeId;
     private String storePhone;
@@ -37,7 +39,7 @@ public class OrderHistory {
     private double storeLatitude;
     private LocalDateTime due;
     private double distanceFromStoreToCustomer;
-    private String ReasonForCancellation;
+    private String reasonForCancellation;
 
     private String riderRequests;
     private int deliveryFee;
@@ -49,13 +51,22 @@ public class OrderHistory {
     private List<String> orderState;
 
     private HashMap<String, List<String>> menuNameList;
-    private String menuItem;
+    private List<Order.Option> options;
+    private List<Order.OptionList> optionLists;
+    private List<Order.MenuItem> menuItems;
+    private String menuName;
+    private int totalPrice;
+    private List<Order.OptionList> selectedOptions;
+    private String listName;
+    private String optionTitle;
+    private int optionPrice;
 
     public static OrderHistory convertToOrderHistory(Order order) {
         return OrderHistory.builder()
                 .customerId(order.getCustomerId())
                 .customerAddress(order.getCustomerAddress())
                 .customerRequests(order.getCustomerRequests())
+                .ownerId(order.getOwnerId())
                 .storeId(order.getStoreId())
                 .storePhone(order.getStorePhone())
                 .storeName(order.getStoreName())
@@ -67,13 +78,21 @@ public class OrderHistory {
                 .storeLatitude(order.getStoreLatitude())
                 .due(order.getDue())
                 .distanceFromStoreToCustomer(order.getDistanceFromStoreToCustomer())
-                .ReasonForCancellation(order.getReasonForCancellation())
+                .reasonForCancellation(order.getReasonForCancellation())
                 .riderRequests(order.getRiderRequests())
                 .deliveryFee(order.getDeliveryFee())
-                .orderCreatedAt(order.getOrderCreatedAt())
-                .orderState(order.getOrderState())
-                .menuItem(order.getMenuName() + " " + order.getOptionTitle())
+                .orderState(order.getOrderState() != null ? order.getOrderState() : new ArrayList<>())
                 .isDeleted(false)
+                .menuNameList(order.getMenuNameList() != null ? order.getMenuNameList() : new HashMap<>())
+                .options(order.getOptions() != null ? order.getOptions() : new ArrayList<>())
+                .optionLists(order.getOptionLists() != null ? order.getOptionLists() : new ArrayList<>())
+                .menuItems(order.getMenuItems() != null ? order.getMenuItems() : new ArrayList<>())
+                .menuName(order.getMenuName() != null ? order.getMenuName() : "")
+                .totalPrice(order.getTotalPrice())
+                .selectedOptions(order.getSelectedOptions() != null ? order.getSelectedOptions() : new ArrayList<>())
+                .listName(order.getListName() != null ? order.getListName() : "")
+                .optionTitle(order.getOptionTitle() != null ? order.getOptionTitle() : "")
+                .optionPrice(order.getOptionPrice())
                 .build();
     }
 

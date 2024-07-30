@@ -54,6 +54,7 @@ public class MongoDao implements MongoDaoImpl{
     @Override
     public void save(OrderHistory orderHistory) {
         mongoTemplate.save(orderHistory);
+        System.out.println("MongoDAO");
     }
 
     @Override

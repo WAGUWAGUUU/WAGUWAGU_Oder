@@ -3,11 +3,13 @@ package com.example.order.service;
 
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
+import com.example.order.domain.request.UpdateRequest;
 import com.example.order.domain.request.UserRequest;
 import com.mongodb.client.result.UpdateResult;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public interface OrderService {
     void save(UserRequest userRequest);
@@ -15,8 +17,10 @@ public interface OrderService {
     List<OrderHistory> OrderHistoryFindByCustomerId(Long customerId);
     List<OrderHistory> OrderHistoryFindByOwnerId(Long storeId);
     UpdateResult OrderHistoryDelete(Long id);
-    OrderHistory OrderHistoryUpdate(Long id, String state);
+//    OrderHistory OrderHistoryUpdate(Long id, String state);
     List<Order> get(Long requestId);
-    Order update(Long id, String state);
+    List<Order> getOrderStoreId(Long requestId);
+    List<Order> getOrderCustomerId(Long requestId);
+    List<String> update(UUID id, UpdateRequest updateRequest);
     void delete(Long id);
 }
