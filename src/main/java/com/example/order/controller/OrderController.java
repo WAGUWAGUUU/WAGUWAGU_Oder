@@ -1,16 +1,19 @@
 package com.example.order.controller;
 
+import com.example.order.domain.dto.OrderDto;
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
 import com.example.order.domain.request.UpdateRequest;
 import com.example.order.domain.request.UserRequest;
+import com.example.order.domain.response.UserResponse;
+import com.example.order.global.utils.JwtUtil;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDate;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,25 +24,56 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final JwtUtil jwtUtil;
 
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/userInformation")
+    public UserResponse UserInformation(@RequestHeader("Authorization") String token){
+        String bearerToken = token.substring(7);
+        return UserResponse.ToEntity(jwtUtil.getCustomerFromToken(bearerToken).getCustomerLongitude(),
+                jwtUtil.getCustomerFromToken(bearerToken).getCustomerLatitude(), jwtUtil.getCustomerFromToken(bearerToken).getCustomerId());
+    }
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/")
-    public String orderSave(@RequestBody UserRequest userRequest) {
-        orderService.save(userRequest);
+    public String orderSave(@RequestHeader("Authorization") String token,@RequestBody UserRequest userRequest) {
+        String bearerToken = token.substring(7);
+        Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+        String customerAddress = jwtUtil.getCustomerFromToken(bearerToken).getCustomerAddress();
+        Order order = OrderDto.toEntity(userRequest, customerId, customerAddress);
+        orderService.save(order);
         return "주문내역 저장 성공";
     }
-
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/customer")
+    public  List<Order> getOrderCustomerId(@RequestHeader("Authorization") String token) {
+        String bearerToken = token.substring(7);
+        Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+        List<Order> orders = (List<Order>) orderService.getOrderCustomerId(customerId);
+        return orders;
+    }
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/store/{storeId}/all")
+    public  List<Order> getOrderStoreId(@PathVariable Long storeId) {
+        List<Order> orders = (List<Order>) orderService.getOrderStoreId(storeId);
+        return orders;
+    }
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/request/{orderId}")
     public List<String> updateOrder(@PathVariable("orderId") UUID id, @RequestBody UpdateRequest updateRequest) {
+        System.out.println(updateRequest.due());
         List<String> update = orderService.update(id,updateRequest);
         return update;
     }
 
-    @GetMapping("/consumer/{consumerId}")
-    public List<OrderHistory> selectByConsumerAll(@PathVariable Long consumerId) {
-        return orderService.OrderHistoryFindByCustomerId(consumerId);
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/customer/history")
+    public List<OrderHistory> selectByConsumerAll(@RequestHeader("Authorization") String token) {
+        System.out.println("/customer/history 반응");
+        String bearerToken = token.substring(7);
+        Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+        return orderService.OrderHistoryFindByCustomerId(customerId);
     }
-
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/store/{storeId}")
     public List<OrderHistory> selectByStoreAll(@PathVariable Long storeId) {
         return orderService.OrderHistoryFindByOwnerId(storeId);
@@ -47,14 +81,28 @@ public class OrderController {
 
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/{requestId}/history")
-    public List<OrderHistory> selectByDate(@PathVariable Long requestId,
-                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+    @GetMapping("/history")
+    public List<OrderHistory> selectByCustomerIdDate(@RequestHeader("Authorization") String token,
+                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp startDate,
+                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp endDate,
                                            @RequestParam int pageNumber
                                     ){
+    String bearerToken = token.substring(7);
+    Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+    List<OrderHistory> orderHistories = orderService.selectByCustomerIdDate(customerId, startDate, endDate, pageNumber);
+        return orderHistories;
+    }
 
-    List<OrderHistory> orderHistories = orderService.selectByDate(requestId, startDate, endDate, pageNumber);
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{storeId}/history")
+    public List<OrderHistory> selectByStoreDate(
+            @PathVariable Long storeId,
+            @RequestParam Timestamp startDate,
+            @RequestParam Timestamp endDate,
+            @RequestParam int pageNumber
+    ) {
+        List<OrderHistory> orderHistories = orderService.selectByStoreDate(storeId, startDate, endDate, pageNumber);
+        System.out.println(orderHistories.stream().toList());
         return orderHistories;
     }
 
@@ -68,25 +116,6 @@ public class OrderController {
 
 
 
-    @GetMapping("/consumer/{requestId}/all")
-    public  List<Order> getOrderCustomerId(@PathVariable Long requestId) {
-        List<Order> orders = (List<Order>) orderService.getOrderCustomerId(requestId);
-        return orders;
-    }
-
-
-    @GetMapping("/store/{requestId}/all")
-    public  List<Order> getOrderStoreId(@PathVariable Long requestId) {
-        List<Order> orders = (List<Order>) orderService.getOrderStoreId(requestId);
-        return orders;
-    }
-
-    @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/delete/{orderId}")
-    public String deleteOrder(@PathVariable Long orderId){
-        orderService.delete(orderId);
-        return "주문건 삭제 성공";
-    }
 
 
 

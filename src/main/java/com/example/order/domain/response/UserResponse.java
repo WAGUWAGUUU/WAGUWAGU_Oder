@@ -1,6 +1,19 @@
 package com.example.order.domain.response;
 
-public record UserResponse(
+import lombok.Builder;
 
+@Builder
+public record UserResponse(
+    double customerLongitude,
+    double customerLatitude,
+    Long customerId
 ) {
+    public static UserResponse ToEntity(double customerLongitude, double customerLatitude,Long customerId){
+
+        return UserResponse.builder()
+                .customerLongitude(customerLongitude)
+                .customerLatitude(customerLatitude)
+                .customerId(customerId)
+                .build();
+    }
 }

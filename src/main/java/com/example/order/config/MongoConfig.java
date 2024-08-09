@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = "com.example.order.repository.mongo")
+//@EnableMongoRepositories(basePackages = "com.example.order.repository.mongo")
 public class MongoConfig {
     @Bean
     public MappingMongoConverter mappingMongoConverter(

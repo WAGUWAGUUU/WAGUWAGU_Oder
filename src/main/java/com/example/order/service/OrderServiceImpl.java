@@ -5,20 +5,18 @@ import com.example.order.domain.dao.RedisDao;
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
 import com.example.order.domain.request.UpdateRequest;
-import com.example.order.domain.request.UserRequest;
 import com.example.order.domain.type.StatusType;
 import com.example.order.kafka.dto.KafkaCartDTO;
 import com.example.order.kafka.dto.KafkaDeliveryDTO;
+import com.example.order.kafka.dto.KafkaSalesDTO;
 import com.example.order.kafka.dto.KafkaStatus;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDate;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,28 +27,34 @@ public class OrderServiceImpl implements OrderService {
 
     private final KafkaTemplate<String, KafkaStatus<KafkaDeliveryDTO>> kafkaDeliveryTemplate;
     private final KafkaTemplate<String, KafkaStatus<KafkaCartDTO>> kafkaCartTemplate;
-    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, KafkaStatus<KafkaSalesDTO>> kafkaSaleTemplate;
     private final RedisDao redisDao;
     private final MongoDao mongoDao;
 
     @Override
-    public void save(UserRequest userRequest) {
-
-
-        redisDao.save(userRequest.toEntity());
+    public void save(Order order) {
+        redisDao.save(order);
         KafkaCartDTO kafkaCartDTO = KafkaCartDTO.builder()
-                .customerId(userRequest.customerId())
+                .customerId(order.getCustomerId())
                 .build();
         KafkaStatus<KafkaCartDTO> kafkaStatus = new KafkaStatus<>(kafkaCartDTO, StatusType.CREATED.name());
         kafkaCartTemplate.send("order-topic", kafkaStatus);
     }
 
+    @Override
+    public List<OrderHistory> selectByCustomerIdDate(Long id, Timestamp startDate, Timestamp endDate, int pageNumber) {
+
+        return List.of();
+    }
+
     @Transactional
     @Override
     public List<String> update(UUID id, UpdateRequest updateRequest) {
+        System.out.println(updateRequest.due());
         StatusType statusType = StatusType.fromString(updateRequest.status());
         Order update = redisDao.update(id, statusType.getDisplayName());
-
+        update.insertDau(updateRequest.due());
+        System.out.println(statusType);
         if (statusType == StatusType.DELIVERY_REQUEST) {
             KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
                     .orderId(update.getOrderId())
@@ -66,7 +70,15 @@ public class OrderServiceImpl implements OrderService {
             return update.getOrderState();
         }else if (statusType == StatusType.DELIVERED) {
             OrderHistory orderHistory = OrderHistory.convertToOrderHistory(update);
+            KafkaSalesDTO kafkaSalesDTO = KafkaSalesDTO.builder()
+                    .storeId(update.getStoreId())
+                    .sales(update.getOrderTotalPrice())
+                    .time(new Timestamp(System.currentTimeMillis()))
+                    .build();
+            KafkaStatus<KafkaSalesDTO> kafkaStatus = new KafkaStatus<>(kafkaSalesDTO,"sales");
+            kafkaSaleTemplate.send("order-topic", kafkaStatus);
             mongoDao.save(orderHistory);
+            redisDao.delete(update.getOrderId());
             return update.getOrderState();
         }else if (statusType == StatusType.DELIVERING){
             update.insertRiderId(updateRequest.riderId());
@@ -77,10 +89,10 @@ public class OrderServiceImpl implements OrderService {
         return update.getOrderState();
     }
 
-    
+
     @Override
-    public List<OrderHistory> selectByDate(Long id, LocalDate startDate, LocalDate endDate, int pageNumber) {
-        return mongoDao.selectByDate(id,startDate,endDate,pageNumber,10);
+    public List<OrderHistory> selectByStoreDate(Long id, Timestamp startDate, Timestamp endDate, int pageNumber) {
+        return List.of();
     }
 
     @Override
@@ -89,26 +101,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderHistory> OrderHistoryFindByOwnerId(Long ownerId) {
-        return mongoDao.findByOwnerId(ownerId);
+    public List<OrderHistory> OrderHistoryFindByOwnerId(Long storeId) {
+        return List.of();
     }
-
-    @Override
-    public UpdateResult OrderHistoryDelete(Long id) {
-        return mongoDao.delete(id);
-    }
-
-//    @Override
-//    public OrderHistory OrderHistoryUpdate(UUID id, String state) {
-//        StatusType statusType = StatusType.fromString(state);
-//        return mongoDao.update(id,statusType.getDisplayName());
-//    }
 
 
     @Override
-    public List<Order> get(Long requestId) {
-        return redisDao.get(requestId);
+    public void OrderHistoryDelete(Long id) {
+        mongoDao.delete(id);
     }
+
 
     @Override
     public List<Order> getOrderStoreId(Long requestId) {
@@ -123,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         redisDao.delete(id);
     }
 

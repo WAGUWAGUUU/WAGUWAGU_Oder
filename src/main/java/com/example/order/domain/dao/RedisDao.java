@@ -1,9 +1,13 @@
 package com.example.order.domain.dao;
 
 import com.example.order.domain.entity.Order;
+import com.example.order.domain.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRedIsRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
+
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -12,104 +16,77 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class RedisDao implements RedisDaoImpl{
 
     private final OrderRedIsRepository orderRedIsRepository;
+    private final ReentrantLock lock = new ReentrantLock(true);
 
     @Override
-    public Order save(Order order) {
-        return orderRedIsRepository.save(order);
-    }
-
-    @Override
-    public List<Order> get(Long ownerId) {
-        System.out.println("Fetching order with requestId: " + ownerId);
-        List<Order> allOrders = orderRedIsRepository.findAll();
-        List<Order> filteredOrders = allOrders.stream()
-                .filter(order -> order.getStoreId().equals(ownerId))
-                .collect(Collectors.toList());
-        return filteredOrders;
+    public void save(Order order) {
+        orderRedIsRepository.save(order);
     }
 
     @Override
     public List<Order> getOrderStoreId(Long storeId) {
-        System.out.println("Fetching order with requestId: " + storeId);
+        System.out.println("requestId: " + storeId);
         List<Order> allOrders = orderRedIsRepository.findAll();
-        List<Order> filteredOrders = allOrders.stream()
+        return allOrders.stream()
                 .filter(order -> order.getStoreId().equals(storeId))
                 .collect(Collectors.toList());
-        return filteredOrders;
     }
 
     @Override
     public List<Order> getOrderCustomerId(Long customerId) {
-        System.out.println("Fetching order with requestId: " + customerId);
-
+        log.debug("customerId: " + customerId);
         List<Order> allOrders = orderRedIsRepository.findAll();
-        List<Order> filteredOrders = allOrders.stream()
+        return allOrders.stream()
                 .filter(order -> order.getCustomerId().equals(customerId))
                 .collect(Collectors.toList());
-        return filteredOrders;
     }
-
-
+    @Override
     public Order update(UUID id, String state) {
 
-        Optional<Order> optionalOrder = orderRedIsRepository.findById(id.toString());
-        if (optionalOrder.isPresent()) {
-            Order order = optionalOrder.get();
-            order.setOrderState(state, LocalDateTime.now());
-            orderRedIsRepository.save(order);
-            return order;
-        } else {
-            throw new RuntimeException("아이디를 못 찾았습니다 " + id);
+        try {
+            if (lock.tryLock(3, TimeUnit.SECONDS)) {
+                try {
+                    log.debug("락 획듯.");
+                    Optional<Order> byId = orderRedIsRepository.findById(id.toString());
+                    Order order = byId.orElseThrow(OrderNotFoundException::new);
+                    order.setOrderState(state, new Timestamp(System.currentTimeMillis()));
+                    orderRedIsRepository.save(order);
+                    return order;
+                } finally {
+                    lock.unlock();
+                    log.debug("락 해제");
+                }
+            } else {
+                throw new RuntimeException("락시도를 하였지만 실패");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("락 시도 재실행", e);
         }
     }
 
-//        try {
-//
-//            if (lock.tryLock(3, TimeUnit.SECONDS)) {
-//                try {
-//                    System.out.println("락을 획득했습니다.");
-//
-//                    redisOrder.setOrderState(state, LocalDateTime.now());
-//                    orderRedIsRepository.save(redisOrder);
-//
-//                } finally {
-//                    lock.unlock();
-//                }
-//            } else {
-//                System.out.println("락 획득에 실패했습니다.");
-//            }
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-//        return redisOrder;
-//    }
-
     @Override
-    public void delete(Long id) {
-        ReentrantLock lock = new ReentrantLock(true);
-        Optional<Order> byId = orderRedIsRepository.findById(String.valueOf(id));
-        Order order = byId.orElseThrow(() -> new RuntimeException("아이디를 못 찾았습니다 " + id));
-
+    public void delete(UUID id) {
         try {
-
+            Optional<Order> byId = orderRedIsRepository.findById(String.valueOf(id));
+            Order order = byId.orElseThrow(OrderNotFoundException::new);
             if (lock.tryLock(3, TimeUnit.SECONDS)) {
                 try {
-                    System.out.println("락을 획득했습니다.");
-
+                    log.debug("락을 획득");
                     orderRedIsRepository.delete(order);
-
                 } finally {
                     lock.unlock();
+                    log.debug("락 해제");
                 }
             } else {
-                System.out.println("락 획득에 실패했습니다.");
-            }
+               log.debug("락 획득 실패");
+                }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

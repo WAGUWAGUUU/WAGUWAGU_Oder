@@ -2,7 +2,7 @@ package com.example.order.kafka.dto;
 
 import lombok.Builder;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Builder
@@ -14,7 +14,7 @@ public record KafkaDeliveryDTO(
         double distanceFromStoreToCustomer,
         double storeLongitude,
         double storeLatitude,
-        LocalDateTime due
+        Timestamp due
 
 ) {
 }
