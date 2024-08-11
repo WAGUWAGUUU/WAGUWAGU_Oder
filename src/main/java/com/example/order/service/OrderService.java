@@ -11,10 +11,9 @@ import java.util.UUID;
 
 public interface OrderService {
     void save(Order order);
-    List<OrderHistory> selectByCustomerIdDate(Long id, Timestamp startDate, Timestamp endDate, int pageNumber);
-    List<OrderHistory> selectByStoreDate(Long id, Timestamp startDate, Timestamp endDate, int pageNumber);
+    List<OrderHistory> selectByCustomerIdDate(Long customerId, Timestamp startDate, Timestamp endDate, int pageNumber);
+    List<OrderHistory> selectByStoreDate(Long storeId, Timestamp startDate, Timestamp endDate, int pageNumber);
     List<OrderHistory> OrderHistoryFindByCustomerId(Long customerId);
-    List<OrderHistory> OrderHistoryFindByOwnerId(Long storeId);
     void OrderHistoryDelete(Long id);
     List<Order> getOrderStoreId(Long requestId);
     List<Order> getOrderCustomerId(Long requestId);

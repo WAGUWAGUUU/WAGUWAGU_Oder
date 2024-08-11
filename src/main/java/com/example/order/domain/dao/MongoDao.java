@@ -24,10 +24,9 @@ public class MongoDao implements MongoDaoImpl{
     @Override
     public List<OrderHistory> selectByCustomerIdDate(Long customerId, Timestamp startDate, Timestamp endDate, int pageNumber, int pageSize) {
 
-//        LocalTime customTime = LocalTime.of(0, 0, 0);
         Query query = new Query();
         query.addCriteria(Criteria.where("customerId").is(customerId)
-                .and("orderCreatedAt").gte(startDate).lt(endDate)
+                .and("CREATED").gte(startDate).lt(endDate)
                 .and("isDeleted").is(false));
         query.skip((long) pageNumber * pageSize).limit(pageSize);
         return mongoTemplate.find(query, OrderHistory.class);
@@ -37,7 +36,7 @@ public class MongoDao implements MongoDaoImpl{
     public List<OrderHistory> selectByStoreDate(Long storeId, Timestamp startDate, Timestamp endDate, int pageNumber, int pageSize) {
         Query query = new Query();
         query.addCriteria(Criteria.where("storeId").is(storeId)
-                .and("orderCreatedAt").gte(startDate).lt(endDate)
+                .and("CREATED").gte(startDate).lt(endDate)
                 .and("isDeleted").is(false));
         query.skip((long) pageNumber * pageSize).limit(pageSize);
         return mongoTemplate.find(query, OrderHistory.class);
@@ -50,7 +49,6 @@ public class MongoDao implements MongoDaoImpl{
         List<OrderHistory> orderHistories = mongoTemplate.find(query, OrderHistory.class);
         return orderHistories;
     }
-
 
     @Override
     public List<OrderHistory> findByStoreId(Long ownerId) {

@@ -1,7 +1,13 @@
 package com.example.order.domain.type;
 
-public enum StatusType {
+import com.example.order.domain.exception.StatusTypeNotFoundException;
+import lombok.Getter;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@Getter
+public enum StatusType {
     CREATED("주문 요청"),
     COOKING("조리중"),
     COOKED("조리완료"),
@@ -11,6 +17,13 @@ public enum StatusType {
     CANCEL("주문취소"),
     ACCEPT_DELIVERY("배달 수락");
 
+    private static final Map<String, StatusType> STRING_TO_ENUM = new HashMap<>();
+
+    static {
+        for (StatusType status : values()) {
+            STRING_TO_ENUM.put(status.displayName.toLowerCase(), status);
+        }
+    }
 
     private final String displayName;
 
@@ -18,30 +31,11 @@ public enum StatusType {
         this.displayName = displayName;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
     public static StatusType fromString(String type) {
-        switch(type.toLowerCase()) {
-            case "주문 요청":
-                return StatusType.CREATED;
-            case "조리중":
-                return StatusType.COOKING;
-            case "조리 완료":
-                return StatusType.COOKED;
-            case "배달 요청":
-                return StatusType.DELIVERY_REQUEST;
-            case "배달 수락":
-                return StatusType.ACCEPT_DELIVERY;
-            case "배달중":
-                return StatusType.DELIVERING;
-            case "배달 완료":
-                return StatusType.DELIVERED;
-            case "주문 취소":
-                return  StatusType.CANCEL;
-            default:
-                throw new IllegalArgumentException("Unknown status type: " + type);
+        StatusType status = STRING_TO_ENUM.get(type.toLowerCase());
+        if (status == null) {
+            throw new StatusTypeNotFoundException();
         }
+        return status;
     }
 }

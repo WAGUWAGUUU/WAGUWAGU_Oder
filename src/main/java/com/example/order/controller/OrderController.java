@@ -73,12 +73,6 @@ public class OrderController {
         Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
         return orderService.OrderHistoryFindByCustomerId(customerId);
     }
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/store/{storeId}")
-    public List<OrderHistory> selectByStoreAll(@PathVariable Long storeId) {
-        return orderService.OrderHistoryFindByOwnerId(storeId);
-    }
-
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/history")

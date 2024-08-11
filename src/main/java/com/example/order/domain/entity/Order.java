@@ -1,5 +1,7 @@
 package com.example.order.domain.entity;
 
+import com.example.order.domain.exception.StatusTypeNotFoundException;
+import com.example.order.domain.type.StatusType;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
@@ -44,6 +46,16 @@ public class Order {
 
     private String riderRequests;
     private int orderTotalPrice;
+
+    private Timestamp CREATED;
+    private Timestamp COOKING;
+    private Timestamp COOKED;
+    private Timestamp DELIVERY_REQUEST;
+    private Timestamp DELIVERING;
+    private Timestamp DELIVERED;
+    private Timestamp CANCEL;
+    private Timestamp ACCEPT_DELIVERY;
+
     @Setter
     private List<String> orderState;
     private List<Option> options;
@@ -71,6 +83,36 @@ public class Order {
         private String optionTitle;
         private int optionPrice;
     }
+    public void setTimestamp(StatusType statusType, Timestamp timestamp) {
+        switch (statusType) {
+            case CREATED:
+                this.CREATED = timestamp;
+                break;
+            case COOKING:
+                this.COOKING = timestamp;
+                break;
+            case COOKED:
+                this.COOKED = timestamp;
+                break;
+            case DELIVERY_REQUEST:
+                this.DELIVERY_REQUEST = timestamp;
+                break;
+            case DELIVERING:
+                this.DELIVERING = timestamp;
+                break;
+            case DELIVERED:
+                this.DELIVERED = timestamp;
+                break;
+            case CANCEL:
+                this.CANCEL = timestamp;
+                break;
+            case ACCEPT_DELIVERY:
+                this.ACCEPT_DELIVERY = timestamp;
+                break;
+            default:
+                throw new StatusTypeNotFoundException();
+        }
+    }
 
 
     public void setOrderState(String state, Timestamp changeTime) {
@@ -79,7 +121,6 @@ public class Order {
         }
         this.orderState.add(state + ":" + changeTime.toString());
     }
-
 
 
     public Order insertRiderId(Long riderId) {
