@@ -2,13 +2,12 @@ package com.example.order.domain.dao;
 
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.exception.OrderNotFoundException;
+import com.example.order.domain.type.StatusType;
 import com.example.order.repository.OrderRedIsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +30,6 @@ public class RedisDao implements RedisDaoImpl{
 
     @Override
     public List<Order> getOrderStoreId(Long storeId) {
-        System.out.println("requestId: " + storeId);
         List<Order> allOrders = orderRedIsRepository.findAll();
         return allOrders.stream()
                 .filter(order -> order.getStoreId().equals(storeId))
@@ -47,30 +45,36 @@ public class RedisDao implements RedisDaoImpl{
                 .collect(Collectors.toList());
     }
     @Override
-    public Order update(UUID id, String state) {
-
+    public Order update(UUID id, String state, StatusType statusType) {
         try {
             if (lock.tryLock(3, TimeUnit.SECONDS)) {
                 try {
-                    log.debug("락 획듯.");
+                    log.debug("락 획득.");
                     Optional<Order> byId = orderRedIsRepository.findById(id.toString());
                     Order order = byId.orElseThrow(OrderNotFoundException::new);
-                    order.setOrderState(state, new Timestamp(System.currentTimeMillis()));
+
+
+                    Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+                    order.setOrderState(state, currentTime);
+                    order.setTimestamp(statusType, currentTime);
+
+                    System.out.println("order.getOrderState(): " + order.getOrderState()); // Corrected printing the order state
+
+
                     orderRedIsRepository.save(order);
                     return order;
                 } finally {
-                    lock.unlock();
-                    log.debug("락 해제");
+                    lock.unlock();  // Always release the lock in the finally block
+                    log.debug("락 해제");  // Lock released
                 }
             } else {
-                throw new RuntimeException("락시도를 하였지만 실패");
+                throw new RuntimeException("락 시도를 하였지만 실패");  // Failed to acquire lock
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("락 시도 재실행", e);
         }
     }
-
     @Override
     public void delete(UUID id) {
         try {

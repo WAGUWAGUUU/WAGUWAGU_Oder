@@ -43,63 +43,54 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<String> update(UUID id, UpdateRequest updateRequest) {
         StatusType statusType = StatusType.fromString(updateRequest.status());
-        Order update = redisDao.update(id, statusType.getDisplayName());
-        update.setTimestamp(statusType,new Timestamp(System.currentTimeMillis()));
+        Order update = redisDao.update(id, statusType.getDisplayName(),statusType);
 
-        switch (statusType) {
+            switch (statusType) {
+                case DELIVERY_REQUEST:
+                    update.updateDue(updateRequest.due());
+                    redisDao.save(update);
+                    KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
+                            .orderId(update.getOrderId())
+                            .storeName(update.getStoreName())
+                            .storeAddress(update.getStoreAddress())
+                            .deliveryFee(update.getDeliveryFee())
+                            .distanceFromStoreToCustomer(update.getDistanceFromStoreToCustomer())
+                            .storeLatitude(update.getStoreLatitude())
+                            .storeLongitude(update.getStoreLongitude())
+                            .due(updateRequest.due()).build();
+                    kafkaProducer.KafkaDeliverySend(kafkaDeliveryDTO, "insert");
+                    break;
+                case DELIVERING:
+                    update.updateRiderId(updateRequest.riderId());
+                    redisDao.save(update);
+                    break;
 
-            case DELIVERY_REQUEST:
-                update.insertDau(updateRequest.due());
-                redisDao.save(update);
-                KafkaDeliveryDTO kafkaDeliveryDTO = KafkaDeliveryDTO.builder()
-                        .orderId(update.getOrderId())
-                        .storeName(update.getStoreName())
-                        .storeAddress(update.getStoreAddress())
-                        .deliveryFee(update.getDeliveryFee())
-                        .distanceFromStoreToCustomer(update.getDistanceFromStoreToCustomer())
-                        .storeLatitude(update.getStoreLatitude())
-                        .storeLongitude(update.getStoreLongitude())
-                        .due(update.getDue()).build();
-                kafkaProducer.KafkaDeliverySend(kafkaDeliveryDTO, "insert");
-                break;
-
-            case DELIVERING:
-                update.insertRiderId(updateRequest.riderId());
-                redisDao.save(update);
-                break;
-
-            case DELIVERED:
-                OrderHistory orderHistory = OrderHistory.convertToOrderHistory(update);
-                KafkaSalesDTO kafkaSalesDTO = KafkaSalesDTO.builder()
-                        .storeId(update.getStoreId())
-                        .sales(update.getOrderTotalPrice())
-                        .time(new Timestamp(System.currentTimeMillis()))
-                        .build();
-                kafkaProducer.KafkaSalesSend(kafkaSalesDTO, "sales");
-                mongoDao.save(orderHistory);
-                redisDao.delete(update.getOrderId());
-                break;
-
-            default:
-                throw new StatusTypeNotFoundException();
-        }
+                case DELIVERED:
+                    OrderHistory orderHistory = OrderHistory.convertToOrderHistory(update);
+                    KafkaSalesDTO kafkaSalesDTO = KafkaSalesDTO.builder()
+                            .storeId(update.getStoreId())
+                            .sales(update.getOrderTotalPrice())
+                            .time(new Timestamp(System.currentTimeMillis()))
+                            .build();
+                    kafkaProducer.KafkaSalesSend(kafkaSalesDTO, "sales");
+                    mongoDao.save(orderHistory);
+                    redisDao.delete(update.getOrderId());
+                    break;
+                default:
+                    break;
+            }
 
         return update.getOrderState();
     }
 
     @Override
-    public List<OrderHistory> selectByCustomerIdDate(Long id, Timestamp startDate, Timestamp endDate, int pageNumber) {
-        return List.of();
+    public List<OrderHistory> selectByStoreDate(Long storeId, Timestamp startDate, Timestamp endDate, Long offset) {
+        return mongoDao.selectByStoreDate(storeId, startDate, endDate, offset, 10);
     }
 
     @Override
-    public List<OrderHistory> selectByStoreDate(Long storeId, Timestamp startDate, Timestamp endDate, int pageNumber) {
-        return mongoDao.selectByStoreDate(storeId, startDate, endDate, pageNumber, 10);
-    }
-
-    @Override
-    public List<OrderHistory> OrderHistoryFindByCustomerId(Long customerId) {
-        return mongoDao.findByCustomerId(customerId);
+    public List<OrderHistory> OrderHistoryFindByCustomerId(Long customerId ,Long offset) {
+        return mongoDao.findByCustomerId(customerId,offset);
     }
 
     @Override

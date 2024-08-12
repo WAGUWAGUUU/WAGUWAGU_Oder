@@ -11,7 +11,7 @@ public enum StatusType {
     CREATED("주문 요청"),
     COOKING("조리중"),
     COOKED("조리완료"),
-    DELIVERY_REQUEST("배달요청"),
+    DELIVERY_REQUEST("배달 요청"),
     DELIVERING("배달중"),
     DELIVERED("배달 완료"),
     CANCEL("주문취소"),

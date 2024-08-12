@@ -40,21 +40,21 @@ public class Order {
 
     private double storeLongitude;
     private double storeLatitude;
-    private Timestamp due;
+    private String due;
     private double distanceFromStoreToCustomer;
     private String reasonForCancellation;
 
     private String riderRequests;
     private int orderTotalPrice;
 
-    private Timestamp CREATED;
-    private Timestamp COOKING;
-    private Timestamp COOKED;
-    private Timestamp DELIVERY_REQUEST;
-    private Timestamp DELIVERING;
-    private Timestamp DELIVERED;
-    private Timestamp CANCEL;
-    private Timestamp ACCEPT_DELIVERY;
+    private String CREATED;
+    private String COOKING;
+    private String COOKED;
+    private String DELIVERY_REQUEST;
+    private String DELIVERING;
+    private String DELIVERED;
+    private String CANCEL;
+    private String ACCEPT_DELIVERY;
 
     @Setter
     private List<String> orderState;
@@ -83,34 +83,36 @@ public class Order {
         private String optionTitle;
         private int optionPrice;
     }
+
     public void setTimestamp(StatusType statusType, Timestamp timestamp) {
+        String timestampStr = timestamp.toString();
         switch (statusType) {
             case CREATED:
-                this.CREATED = timestamp;
+                this.CREATED = timestampStr;
                 break;
             case COOKING:
-                this.COOKING = timestamp;
+                this.COOKING = timestampStr;
                 break;
             case COOKED:
-                this.COOKED = timestamp;
+                this.COOKED = timestampStr;
                 break;
             case DELIVERY_REQUEST:
-                this.DELIVERY_REQUEST = timestamp;
+                this.DELIVERY_REQUEST = timestampStr;
                 break;
             case DELIVERING:
-                this.DELIVERING = timestamp;
+                this.DELIVERING = timestampStr;
                 break;
             case DELIVERED:
-                this.DELIVERED = timestamp;
+                this.DELIVERED = timestampStr;
                 break;
             case CANCEL:
-                this.CANCEL = timestamp;
+                this.CANCEL = timestampStr;
                 break;
             case ACCEPT_DELIVERY:
-                this.ACCEPT_DELIVERY = timestamp;
+                this.ACCEPT_DELIVERY = timestampStr;
                 break;
             default:
-                throw new StatusTypeNotFoundException();
+                break;
         }
     }
 
@@ -123,17 +125,12 @@ public class Order {
     }
 
 
-    public Order insertRiderId(Long riderId) {
-        return Order.builder()
-                .riderId(riderId)
-
-                .build();
+    public void updateRiderId(Long riderId) {
+        this.riderId = riderId;
     }
 
-    public Order insertDau(Timestamp dau) {
-        return Order.builder()
-                .due(dau)
-                .build();
+    public void updateDue(Timestamp due) {
+        this.due = due.toString();
     }
 
 }

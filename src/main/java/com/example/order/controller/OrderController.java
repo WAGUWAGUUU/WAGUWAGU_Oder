@@ -10,7 +10,6 @@ import com.example.order.global.utils.JwtUtil;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
@@ -28,7 +27,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/userInformation")
-    public UserResponse UserInformation(@RequestHeader("Authorization") String token){
+    public UserResponse userInformation(@RequestHeader("Authorization") String token){
         String bearerToken = token.substring(7);
         return UserResponse.ToEntity(jwtUtil.getCustomerFromToken(bearerToken).getCustomerLongitude(),
                 jwtUtil.getCustomerFromToken(bearerToken).getCustomerLatitude(), jwtUtil.getCustomerFromToken(bearerToken).getCustomerId());
@@ -48,58 +47,41 @@ public class OrderController {
     public  List<Order> getOrderCustomerId(@RequestHeader("Authorization") String token) {
         String bearerToken = token.substring(7);
         Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
-        List<Order> orders = (List<Order>) orderService.getOrderCustomerId(customerId);
-        return orders;
+        return orderService.getOrderCustomerId(customerId);
     }
+
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/store/{storeId}/all")
     public  List<Order> getOrderStoreId(@PathVariable Long storeId) {
-        List<Order> orders = (List<Order>) orderService.getOrderStoreId(storeId);
-        return orders;
+        return orderService.getOrderStoreId(storeId);
     }
+
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/request/{orderId}")
     public List<String> updateOrder(@PathVariable("orderId") UUID id, @RequestBody UpdateRequest updateRequest) {
-        System.out.println(updateRequest.due());
-        List<String> update = orderService.update(id,updateRequest);
-        return update;
+        return orderService.update(id,updateRequest);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/customer/history")
-    public List<OrderHistory> selectByConsumerAll(@RequestHeader("Authorization") String token) {
-        System.out.println("/customer/history 반응");
+    public List<OrderHistory> selectByConsumerAll(@RequestHeader("Authorization") String token ,@RequestParam Long offset) {
         String bearerToken = token.substring(7);
         Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
-        return orderService.OrderHistoryFindByCustomerId(customerId);
-    }
-
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/history")
-    public List<OrderHistory> selectByCustomerIdDate(@RequestHeader("Authorization") String token,
-                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp startDate,
-                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp endDate,
-                                           @RequestParam int pageNumber
-                                    ){
-    String bearerToken = token.substring(7);
-    Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
-    List<OrderHistory> orderHistories = orderService.selectByCustomerIdDate(customerId, startDate, endDate, pageNumber);
-        return orderHistories;
+        return orderService.OrderHistoryFindByCustomerId(customerId,offset);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{storeId}/history")
     public List<OrderHistory> selectByStoreDate(
             @PathVariable Long storeId,
-            @RequestParam Timestamp startDate,
-            @RequestParam Timestamp endDate,
-            @RequestParam int pageNumber
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam Long offset
     ) {
-        List<OrderHistory> orderHistories = orderService.selectByStoreDate(storeId, startDate, endDate, pageNumber);
-        System.out.println(orderHistories.stream().toList());
-        return orderHistories;
+        Timestamp startTimestamp = new Timestamp(Long.parseLong(startDate));
+        Timestamp endTimestamp = new Timestamp(Long.parseLong(endDate));
+        return orderService.selectByStoreDate(storeId, startTimestamp, endTimestamp, offset);
     }
-
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/delete/{orderId}/history")
@@ -108,10 +90,17 @@ public class OrderController {
         return "주문건 삭제 성공";
     }
 
-
-
-
-
-
+//    @ResponseStatus(HttpStatus.OK)
+//    @GetMapping("/history")
+//    public List<OrderHistory> selectByCustomerIdDate(@RequestHeader("Authorization") String token,
+//                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp startDate,
+//                                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Timestamp endDate,
+//                                           @RequestParam int pageNumber
+//                                    ){
+//    String bearerToken = token.substring(7);
+//    Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+//    List<OrderHistory> orderHistories = orderService.selectByCustomerIdDate(customerId, startDate, endDate, pageNumber);
+//        return orderHistories;
+//    }
 
 }
