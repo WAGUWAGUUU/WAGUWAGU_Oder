@@ -19,4 +19,5 @@ public interface OrderService {
     List<Order> getOrderCustomerId(Long requestId);
     List<String> update(UUID id, UpdateRequest updateRequest);
     void delete(UUID id);
+    UUID saveOrderReturnUUID(Order order);
 }
