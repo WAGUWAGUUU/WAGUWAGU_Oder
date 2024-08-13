@@ -1,14 +1,16 @@
 package com.example.order.service;
 
 import com.example.order.domain.dao.MongoDao;
+import com.example.order.domain.dao.MongoDaoImpl;
 import com.example.order.domain.dao.RedisDao;
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;
-import com.example.order.domain.exception.StatusTypeNotFoundException;
 import com.example.order.domain.request.UpdateRequest;
+import com.example.order.domain.type.RiderTransportation;
 import com.example.order.domain.type.StatusType;
 import com.example.order.kafka.dto.*;
 import com.example.order.kafka.producer.KafkaProducer;
+import com.example.order.kafka.producer.PaymentProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
     private final KafkaProducer kafkaProducer;
     private final RedisDao redisDao;
     private final MongoDao mongoDao;
+    private final PaymentProducer paymentProducer;
 
     @Override
     public void save(Order order) {
@@ -73,9 +76,20 @@ public class OrderServiceImpl implements OrderService {
                             .sales(update.getOrderTotalPrice())
                             .time(new Timestamp(System.currentTimeMillis()))
                             .build();
+                    KafkaPaymentDto kafkaPaymentDto = new KafkaPaymentDto(
+                            update.getOrderId(),
+                            update.getRiderId(),
+                            update.getDeliveryFee(),
+                            update.getStoreName(),
+                            update.getStoreId(),
+                            update.getOrderTotalPrice(),
+                            RiderTransportation.MOTORBIKE, // front에서 input값으로 받을 예정
+                            update.getDistanceFromStoreToCustomer()
+                    );
                     kafkaProducer.KafkaSalesSend(kafkaSalesDTO, "sales");
                     mongoDao.save(orderHistory);
                     redisDao.delete(update.getOrderId());
+                    paymentProducer.send(kafkaPaymentDto, "payment"); // 정산 진행
                     break;
                 default:
                     break;
@@ -118,5 +132,16 @@ public class OrderServiceImpl implements OrderService {
     @KafkaListener(topics = "order-topic")
     public void synchronization(KafkaStatus<KafkaCartDTO> status) {
         log.debug(status.status());
+    }
+
+    @Override
+    public UUID saveOrderReturnUUID(Order order) {
+        UUID savedOrderId = redisDao.saveOrderReturnUUID(order);
+        KafkaCartDTO kafkaCartDTO = KafkaCartDTO.builder()
+                .customerId(order.getCustomerId())
+                .build();
+        kafkaProducer.KafkaCartSend(kafkaCartDTO, StatusType.CREATED.name());
+        log.info("주문내역 저장 성공");
+        return savedOrderId;
     }
 }

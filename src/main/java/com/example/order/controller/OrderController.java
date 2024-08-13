@@ -103,4 +103,13 @@ public class OrderController {
 //        return orderHistories;
 //    }
 
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/return")
+    public UUID saveOrderReturnUUID(@RequestHeader("Authorization") String token, @RequestBody UserRequest userRequest) {
+        String bearerToken = token.substring(7);
+        Long customerId = jwtUtil.getCustomerFromToken(bearerToken).getCustomerId();
+        String customerAddress = jwtUtil.getCustomerFromToken(bearerToken).getCustomerAddress();
+        Order order = OrderDto.toEntity(userRequest, customerId, customerAddress);
+        return orderService.saveOrderReturnUUID(order);
+    }
 }
