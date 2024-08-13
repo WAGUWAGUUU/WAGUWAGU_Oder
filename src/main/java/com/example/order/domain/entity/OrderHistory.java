@@ -8,10 +8,13 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-@Document(collection = "OrderHistory")@Builder@Slf4j@Getter
+@Document(collection = "OrderHistory")
+@Builder
+@Slf4j
+@Getter
 public class OrderHistory {
 
     @Id
@@ -32,7 +35,7 @@ public class OrderHistory {
     private int deliveryFee;
     private double storeLongitude;
     private double storeLatitude;
-    private Timestamp due;
+    private String due;
     private double distanceFromStoreToCustomer;
     private String reasonForCancellation;
     private String riderRequests;
@@ -48,15 +51,14 @@ public class OrderHistory {
     private List<Order.Option> options;
     private String optionTitle;
     private int optionPrice;
-    private Timestamp CREATED;
-    private Timestamp COOKING;
-    private Timestamp COOKED;
-    private Timestamp DELIVERY_REQUEST;
-    private Timestamp DELIVERING;
-    private Timestamp DELIVERED;
-    private Timestamp CANCEL;
-    private Timestamp ACCEPT_DELIVERY;
-
+    private String CREATED;
+    private String COOKING;
+    private String COOKED;
+    private String DELIVERY_REQUEST;
+    private String DELIVERING;
+    private String DELIVERED;
+    private String CANCEL;
+    private String ACCEPT_DELIVERY;
 
     public static OrderHistory convertToOrderHistory(Order order) {
         return OrderHistory.builder()
@@ -75,21 +77,20 @@ public class OrderHistory {
                 .storeLongitude(order.getStoreLongitude())
                 .storeLatitude(order.getStoreLatitude())
                 .distanceFromStoreToCustomer(order.getDistanceFromStoreToCustomer())
-                .due(Timestamp.valueOf(order.getDue()))
+                .due(order.getDue())
                 .orderTotalPrice(order.getOrderTotalPrice())
                 .reasonForCancellation(order.getReasonForCancellation())
-                .CREATED(Timestamp.valueOf(order.getCREATED()))
-                .COOKING(Timestamp.valueOf(order.getCOOKING()))
-                .COOKED(Timestamp.valueOf(order.getCOOKED()))
-                .DELIVERY_REQUEST(Timestamp.valueOf(order.getDELIVERY_REQUEST()))
-                .ACCEPT_DELIVERY(Timestamp.valueOf(order.getACCEPT_DELIVERY()))
-                .DELIVERING(Timestamp.valueOf(order.getDELIVERING()))
-                .DELIVERED(Timestamp.valueOf(order.getDELIVERED()))
-                .CANCEL(Timestamp.valueOf(order.getCANCEL()))
+                .CREATED(order.getCREATED())
+                .COOKING(order.getCOOKING())
+                .COOKED(order.getCOOKED())
+                .DELIVERY_REQUEST(order.getDELIVERY_REQUEST())
+                .ACCEPT_DELIVERY(order.getACCEPT_DELIVERY())
+                .DELIVERING(order.getDELIVERING())
+                .DELIVERED(order.getDELIVERED())
+                .CANCEL(order.getCANCEL())
                 .orderState(order.getOrderState() != null ? order.getOrderState() : new ArrayList<>())
                 .options(order.getOptions() != null ? order.getOptions() : new ArrayList<>())
                 .menuItems(order.getMenuItems() != null ? order.getMenuItems() : new ArrayList<>())
                 .build();
     }
-
 }

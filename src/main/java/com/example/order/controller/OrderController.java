@@ -30,7 +30,8 @@ public class OrderController {
     public UserResponse userInformation(@RequestHeader("Authorization") String token){
         String bearerToken = token.substring(7);
         return UserResponse.ToEntity(jwtUtil.getCustomerFromToken(bearerToken).getCustomerLongitude(),
-                jwtUtil.getCustomerFromToken(bearerToken).getCustomerLatitude(), jwtUtil.getCustomerFromToken(bearerToken).getCustomerId());
+                jwtUtil.getCustomerFromToken(bearerToken).getCustomerLatitude(), jwtUtil.getCustomerFromToken(bearerToken).getCustomerId(),
+        jwtUtil.getCustomerFromToken(bearerToken).getCustomerNickname());
     }
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/")

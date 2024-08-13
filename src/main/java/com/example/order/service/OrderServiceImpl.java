@@ -1,7 +1,6 @@
 package com.example.order.service;
 
 import com.example.order.domain.dao.MongoDao;
-import com.example.order.domain.dao.MongoDaoImpl;
 import com.example.order.domain.dao.RedisDao;
 import com.example.order.domain.entity.Order;
 import com.example.order.domain.entity.OrderHistory;

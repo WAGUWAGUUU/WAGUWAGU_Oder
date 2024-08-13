@@ -31,10 +31,10 @@ public class MongoDaoImpl implements MongoDao {
 
     @Override
     public List<OrderHistory> findByCustomerId(Long customerId, Long offset) {
-        int pageSize = 10;
+//        int pageSize = 10;
         Query query = new Query();
         query.addCriteria(Criteria.where("customerId").is(customerId).and("isDeleted").is(false));
-        query.skip(offset).limit(pageSize);
+//        query.skip(offset).limit(pageSize);
         List<OrderHistory> orderHistories = mongoTemplate.find(query, OrderHistory.class);
         return orderHistories;
     }
