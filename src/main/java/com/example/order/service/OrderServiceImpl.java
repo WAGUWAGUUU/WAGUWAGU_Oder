@@ -7,10 +7,7 @@ import com.example.order.domain.entity.OrderHistory;
 import com.example.order.domain.exception.StatusTypeNotFoundException;
 import com.example.order.domain.request.UpdateRequest;
 import com.example.order.domain.type.StatusType;
-import com.example.order.kafka.dto.KafkaCartDTO;
-import com.example.order.kafka.dto.KafkaDeliveryDTO;
-import com.example.order.kafka.dto.KafkaSalesDTO;
-import com.example.order.kafka.dto.KafkaStatus;
+import com.example.order.kafka.dto.*;
 import com.example.order.kafka.producer.KafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +41,10 @@ public class OrderServiceImpl implements OrderService {
     public List<String> update(UUID id, UpdateRequest updateRequest) {
         StatusType statusType = StatusType.fromString(updateRequest.status());
         Order update = redisDao.update(id, statusType.getDisplayName(),statusType);
+        KafkaPushReqDTO kafkaPushReqDTO = KafkaPushReqDTO.builder()
+                .customerId(3613397573L)
+                .build();
+        kafkaProducer.KafkaPushReqSend(kafkaPushReqDTO, String.valueOf(statusType));
 
             switch (statusType) {
                 case DELIVERY_REQUEST:

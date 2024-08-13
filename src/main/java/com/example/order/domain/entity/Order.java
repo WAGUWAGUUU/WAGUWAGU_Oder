@@ -1,6 +1,5 @@
 package com.example.order.domain.entity;
 
-import com.example.order.domain.exception.StatusTypeNotFoundException;
 import com.example.order.domain.type.StatusType;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;

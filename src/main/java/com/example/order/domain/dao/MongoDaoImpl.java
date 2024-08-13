@@ -5,7 +5,6 @@ import com.mongodb.client.result.UpdateResult;
 import java.sql.Timestamp;
 import java.util.List;
 
-
 public interface MongoDaoImpl{
 
 //    List<OrderHistory> findByStoreId(Long ownerId);

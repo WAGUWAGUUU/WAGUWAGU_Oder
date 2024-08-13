@@ -19,6 +19,7 @@ public class KafkaProducer {
     private final KafkaTemplate<String, KafkaStatus<KafkaDeliveryDTO>> kafkaDeliveryTemplate;
     private final KafkaTemplate<String, KafkaStatus<KafkaCartDTO>> kafkaCartTemplate;
     private final KafkaTemplate<String, KafkaStatus<KafkaSalesDTO>> kafkaSaleTemplate;
+    private final KafkaTemplate<String, KafkaStatus<KafkaPushReqDTO>> kafkaPushReqTemplate;
 
     public void KafkaDeliverySend(KafkaDeliveryDTO kafkaDeliveryDTO, String status) {
         KafkaStatus<KafkaDeliveryDTO> kafkaStatus = new KafkaStatus<>(kafkaDeliveryDTO, status);
@@ -34,4 +35,10 @@ public class KafkaProducer {
         KafkaStatus<KafkaSalesDTO> kafkaStatus = new KafkaStatus<>(kafkaSalesDTO, status);
         kafkaSaleTemplate.send("order-topic", kafkaStatus);
     }
+
+    public void KafkaPushReqSend(KafkaPushReqDTO kafkaPushReqDTO, String status) {
+        KafkaStatus<KafkaPushReqDTO> kafkaStatus = new KafkaStatus<>(kafkaPushReqDTO, status);
+        kafkaPushReqTemplate.send("order-topic", kafkaStatus);
+    }
+
 }
