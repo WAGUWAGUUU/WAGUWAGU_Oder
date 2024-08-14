@@ -43,11 +43,13 @@ public class OrderServiceImpl implements OrderService {
     public List<String> update(UUID id, UpdateRequest updateRequest) {
         StatusType statusType = StatusType.fromString(updateRequest.status());
         Order update = redisDao.update(id, statusType.getDisplayName(),statusType);
+
         KafkaPushReqDTO kafkaPushReqDTO = KafkaPushReqDTO.builder()
-                .customerId(3613397573L)
+                .customerId(update.getCustomerId())
                 .build();
         kafkaProducer.KafkaPushReqSend(kafkaPushReqDTO, String.valueOf(statusType));
-
+        System.out.println(kafkaPushReqDTO.customerId());
+        System.out.println("String.valueOf(statusType)"+statusType);
             switch (statusType) {
                 case DELIVERY_REQUEST:
                     update.updateDue(updateRequest.due());

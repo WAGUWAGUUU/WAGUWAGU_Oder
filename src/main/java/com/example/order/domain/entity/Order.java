@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @ToString
 @RedisHash("Order")
@@ -129,7 +130,8 @@ public class Order {
     }
 
     public void updateDue(Timestamp due) {
-        this.due = due.toString();
+        Timestamp adjustedDue = new Timestamp(due.getTime() + TimeUnit.HOURS.toMillis(9));
+        this.due = adjustedDue.toString();
     }
 
 }

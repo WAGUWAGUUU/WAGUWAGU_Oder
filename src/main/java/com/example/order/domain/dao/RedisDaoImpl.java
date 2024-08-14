@@ -54,21 +54,21 @@ public class RedisDaoImpl implements RedisDao {
                     Order order = byId.orElseThrow(OrderNotFoundException::new);
 
 
-                    Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+                    Timestamp currentTime = new Timestamp(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(9));
                     order.setOrderState(state, currentTime);
                     order.setTimestamp(statusType, currentTime);
 
-                    System.out.println("order.getOrderState(): " + order.getOrderState()); // Corrected printing the order state
+                    System.out.println("order.getOrderState(): " + order.getOrderState());
 
 
                     orderRedIsRepository.save(order);
                     return order;
                 } finally {
-                    lock.unlock();  // Always release the lock in the finally block
-                    log.debug("락 해제");  // Lock released
+                    lock.unlock();
+                    log.debug("락 해제");
                 }
             } else {
-                throw new RuntimeException("락 시도를 하였지만 실패");  // Failed to acquire lock
+                throw new RuntimeException("락 시도를 하였지만 실패");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
